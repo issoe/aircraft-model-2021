@@ -1,13 +1,23 @@
-import pandas as pd
-import re
-
 #######################################################################################################################
 ############################## ------ MEASURE TIME EXECUTION  ------ ##################################################
 import timeit
 start = timeit.default_timer()
 
 #######################################################################################################################
+############################## ------ COMBINATION FUNCTION  ------ ####################################################
+import operator as op
+from functools import reduce
+def ncr(n, r):
+    r = min(r, n-r)
+    numer = reduce(op.mul, range(n, n-r, -1), 1)
+    denom = reduce(op.mul, range(1, r+1), 1)
+    return numer // denom  # or / in Python 2
+
+#######################################################################################################################
 ############################## ------ LOUNGE_ARRAY --> df_lounge  ------ ##############################################
+import pandas as pd
+import re
+
 df_lounge = pd.read_csv('lounge.csv', sep=';', header=None)
 numberOfLounge = len(df_lounge.iloc[:, 0])
 arr_lounge = []
@@ -94,13 +104,6 @@ for i in range(0, len(arr_pos_case4)):
 def takeOne(elem):
     return elem[0]
 
-# FUNC: Get the time from string TIME
-def decode_time(_string):
-    if len(_string) == 3:
-        return int(_string[0]) * 60 + int(_string[1:3])
-    elif len(_string) == 4:
-        return int(_string[0:2]) * 60 + int(_string[2:4])
-
 # FUNC: Check the next day 
 def next_day(string):
     for i in range(0, len(string)):
@@ -109,11 +112,18 @@ def next_day(string):
             return True
     return False
 
+# FUNC: Get the time from string TIME
+def decode_time(_string):
+    if len(_string) == 3:
+        return int(_string[0]) * 60 + int(_string[1:3])
+    elif len(_string) == 4:
+        return int(_string[0:2]) * 60 + int(_string[2:4])
+
 #######################################################################################################################
 ############################## ------ DATA FRAME ARRAY --> df ------ ##################################################
 # NOTE: DATA INPUT MUST BE SORTED
 # 1. Read data from file "input.csv"
-df = pd.read_csv('input.csv', sep=';', header=None)
+df = pd.read_csv('in.csv', sep=';', header=None)
 numberOfFlights = len(df.iloc[:, 0])
 # print(df)
 
@@ -125,20 +135,28 @@ arr_timeArrival = []    # colum index = 6
 arr_last_colum = []     # colum index = 7
 
 # 3. DATA PROCESSCING
-# FUNC: <FIX>
+# FUNC: ARR_CODEFLIGHTS ARRAY #######################################################
 for i in range(0, numberOfFlights):
-    # print(df[3][i])
+
     string = df[3][i][0:2] # always 2 first letters
     test_string = df[3][i] # temp string 
     res = [int(i) for i in test_string.split() if i.isdigit()] # get all numbers from the index 3 
-    try:
-        arr_codeFlights.append([string+str(res[0]), string+str(res[1])])
-    except:
-        arr_codeFlights.append([string+str(res[0]), str("-")])
 
-# FUNC: CREATE AND ADD THE SCHEDULE INTO ARRAY <FIX>
+    if len(res) == 0:
+        arr_codeFlights.append([test_string, str("-")])
+    elif len(res) == 1:
+        arr_codeFlights.append([string+str(res[0]), str("-")])
+    elif len(res) == 2:
+        arr_codeFlights.append([string+str(res[0]), string+str(res[1])])
+    else:
+        print("Fault at decode arr_codeFlights")
+
+# FUNC: ARR_SCHEDULE ARRAY ##########################################################
 for x in range(0, numberOfFlights):
     temp = df[4][x]
+    if len(temp) != 7 and len(temp) != 11:
+        print("Fault at decode arr_arr_schedule at index:", x+1, "with",  temp)
+
     if len(temp) == 7:
         if temp[0:3] == "SGN":
             arr_schedule.append('3')
@@ -150,7 +168,7 @@ for x in range(0, numberOfFlights):
         else:
             arr_schedule.append('2')
 
-# FUNC: CREATE AND ADD THE TIME OF DEPARTURE INTO ARRAY
+# FUNC: ARR_TIMEDEPARTURE ARRAY #####################################################
 for x in range(0, numberOfFlights):
     # next_day(str(df[6][x]))
     time = re.findall('[0-9]+', str(df[5][x]))
@@ -161,8 +179,13 @@ for x in range(0, numberOfFlights):
     else:
         arr_timeDeparture.append(decode_time(time[0]))
 
+# FUNC: if next flight -> add 1 day to this flight
+for search in range(0, len(arr_timeDeparture)):
+    if next_day(str(df[5][search])) == True:
+        arr_timeDeparture[search] += 1440
 
-# FUNC: CREATE AND ADD THE TIME OF ARRIVAL INTO ARRAY
+# FUNC: ARR_TIMEARRIVAL ARRAY #######################################################
+
 for x in range(0, numberOfFlights):
     # next_day(str(df[6][x]))
     time = re.findall('[0-9]+', str(df[6][x]))
@@ -178,9 +201,14 @@ for search in range(0, len(arr_timeArrival)):
     if next_day(str(df[6][search])) == True:
         arr_timeArrival[search] += 1440
 
-# FUNC: THE LAST COLUM
+
+# FUNC: THE LAST_COLUM ARRAY ########################################################
 for last in range(0, numberOfFlights):
     arr_last_colum.append(df[7][last])
+
+# Testing get data from input.csv ###################################################
+# for idx in range(0, numberOfFlights):
+    # print(idx, arr_codeFlights[idx], arr_schedule[idx], arr_timeDeparture[idx], arr_timeArrival[idx], arr_last_colum[idx])
 
 #######################################################################################################################
 ############################## ------ OBJECTIVE FUNCTION ----- ########################################################
@@ -237,7 +265,6 @@ def get_level_from_position(position):
 
 # FUNC: Find the terminal, and update with newlevel, new kindOfFlight, new noFlight
 def update_level(position, newlevel, curr_kindFlight, curr_flightNo):
-    # print("before update:", position, newlevel, df[1][indexFlight][0:4], arr_codeFlights[indexFlight][0])
     for index in range(0, len(arr_pos_case1)):
         if position == arr_pos_case1[index]:
             arr_level_case1[index][0] = newlevel
@@ -265,8 +292,7 @@ def update_level(position, newlevel, curr_kindFlight, curr_flightNo):
             arr_level_case4[index][1] = curr_kindFlight
             arr_level_case4[index][2] = curr_flightNo
             return
-
-    print("It cannot be updated")
+    print("It cannot be updated:", position, newlevel, df[1][indexFlight][0:4], arr_codeFlights[indexFlight][0])
     return -1
 
 # FUNC: 
@@ -401,7 +427,13 @@ def find_terminal(kindOfFlight, isVN, time_A, time_D, last_colum):
     update_n_Apron(time_D)
     # print("Return pos and level: ", _position, _level)
     return _position, _level
+#######################################################################################################################
+############################## ------ GENETIC ALGORITHM ------ ########################################################
 
+def combination_function(init__list):
+
+
+    return
 #######################################################################################################################
 ############################## ------ ALGORITHM ARRANGEMENT ------ ####################################################
 
@@ -412,9 +444,10 @@ happen_ed = []              # array of history          <FIX> -- may be delete
 
 # VARIABLES FOR ALGORITHM
 indexFlight = 0
+arr_tempMission = []
 
 # TIME IS FROM 1 TO 1440     <FIX>
-for time_minute in range(300, 570):
+for time_minute in range(0, 1440):
     while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
         # case 1: ?-SGN-?
         if arr_schedule[indexFlight] == '1':
@@ -539,8 +572,7 @@ for time_minute in range(300, 570):
             newlevel = arr_waiting_flight[0][0]
             update_level(pos, newlevel, arr_waiting_flight[0][2], arr_waiting_flight[0][1])
 
-            # 3. Remove the first of array contained waiting flights
-            #######  5 lines below to remove the first array  #######
+            # 3. Remove the first element in waiting flights array
             temp_1 = arr_waiting_flight[0][0]
             temp_2 = arr_waiting_flight[0][1]
             temp_3 = arr_waiting_flight[0][2]
@@ -552,17 +584,18 @@ for time_minute in range(300, 570):
 #######################################################################################################################
 ############################## ------ DISPLAY THE RESULT AND STATISTICS ------ ########################################
 # print("--------History---------------")
-# print(happen_ed)
+# for row in happen_ed:
+#     print(row)
 
 # print("--------Waiting flights------------")
 # for row in arr_waiting_flight:
 #     print(row)
 
-# print("--------Result---------------")
-# for row in arr_result:
-#     print(row)
+print("--------Result---------------")
+for row in arr_result:
+    print(row)
 
-
+print("\n--------Statistics---------------")
 stop = timeit.default_timer()
 print('Time: ', stop - start)  
 print("The loop:", count_loop)
