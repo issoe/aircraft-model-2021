@@ -361,10 +361,8 @@ def find_terminal(kindOfFlight, isVN, time_A, time_D, last_colum):
     if (((time_A != -1) and (60 < (time_D - time_A) < 90)) or (time_A == -1)) and (kindOfFlight != "A320") and (kindOfFlight != "A321"):
         if isVN[0:2] == "VN":
             for idx in arr_priority_1: # idx = position 
-                print("the_loop")
                 temp_level = get_level_from_position(idx)                                # <FIX>
                 temp_objective = Objective_Function(kindOfFlight, var_time, idx, isVN)   # <FIX>      
-                print(idx, " and ", temp_objective)
 
                 if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
                     min_objective = Objective_Function(kindOfFlight, var_time, idx, isVN)
