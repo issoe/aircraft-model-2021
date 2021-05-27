@@ -1,6 +1,6 @@
 ####################################################################################################################################
 #################################### ------ Import library  ------ #################################################################
-# from Users.khanhquang.Downloads.AirCraft_MODEL.Again.cur import findPassenger, findTaxi
+# from Users.khanhquang.Downloads.AirCraft_MODEL.Again.sub import takeThree
 from re import A
 
 import sub
@@ -17,10 +17,10 @@ w_1 = 1
 w_2 = 1
 w_3 = 1
 
-# My parameters
+# System parameters
 n_flights_apron = 0
 count_loop = 0
-time_break = 30
+time_break = 25
 
 ####################################################################################################################################
 #################################### ------ MEASURE TIME EXECUTION  ------ #########################################################
@@ -81,23 +81,26 @@ sub.create_initial_level(arr_level_case1, len(arr_pos_case1), arr_level_case2, l
 
 ####################################################################################################################################
 #################################### ------ MY Def ------ #####
-def isValidFlight(position):
-    if len(dfr[1][position]) != 4 and len(dfr[1][position]) != 9:
-        # print("[Fault_001]", position, ", codeFlight:", df[1][position])
+def isValidFlight(var_indexFlight):
+    if len(dfr[1][var_indexFlight]) != 4 and len(dfr[1][var_indexFlight]) != 9:
+        # print("[Fault_001]", position, ", codeFlight:", dfr[1][position])
         return False
 
     countValid = 0
     arr_validFlight = []
-    if len(dfr[1][position]) == 4:
-        arr_validFlight.append(dfr[1][position][0:4])
-    if len(dfr[1][position]) == 9:
-        arr_validFlight.append(dfr[1][position][5:9])
+    if len(dfr[1][var_indexFlight]) == 4:
+        arr_validFlight.append(dfr[1][var_indexFlight][0:4])
+    if len(dfr[1][var_indexFlight]) == 9:
+        arr_validFlight.append(dfr[1][var_indexFlight][5:9])
 
     for valid in arr_validFlight:
         try:
-            testNumber = int(valid[1:4])
+            if valid == "AT72":
+                return True
+            else:
+                testNumber = int(valid[1:4])
         except:
-            # print("[Fault_001]", position, ", codeFlight:", df[1][position])
+            # print("[Fault_001]", position, ", codeFlight:", dfr[1][position])
             return False
 
         if valid == "A320" or valid == "A321" or (valid[0:1] == "A" and 340 < testNumber < 600) or (valid[0:1] == "B" and 200 < testNumber < 800):
@@ -106,25 +109,23 @@ def isValidFlight(position):
     if countValid == len(arr_validFlight):
         return True
     else: 
-        # print("[Fault_001]", position, ", codeFlight:", df[1][position])
+        # print("[Fault_001]", position, ", codeFlight:", dfr[1][position])
         return False
 
 
 def Objective_Function(kindOfFlight, time, position, isVN):
     global w_1, w_2, w_3, count_loop, n_flights_apron, numberOfFlights
     count_loop += 1
-    # if count_loop == 5:
-        # print("============", type(kindOfFlight), type(time), type(position), type(isVN))
-    
+    n_flights_waiting = 0 # TODO: ?????
+
     R_Apron = n_flights_apron/numberOfFlights
 
     avg_Taxi, max_Taxi = sub.findTaxi(position)
     R_Taxi = float(avg_Taxi/max_Taxi)
-    
-    actualAreaPassenger, maxAreaPassenger = sub.findPassenger(isVN)
-    R_Service = (maxAreaPassenger - actualAreaPassenger) / maxAreaPassenger
 
-    return w_1 * R_Apron + w_2 * R_Taxi + w_3 * R_Service
+    R_Hold = n_flights_waiting/numberOfFlights
+
+    return w_1 * R_Apron + w_2 * R_Taxi + w_3 * R_Hold
 
 def get_level_from_position(position):
 
@@ -145,7 +146,7 @@ def get_level_from_position(position):
         if position == arr_CurrPos4[pos]:
             return arr_level_case4[pos][0]
 
-    # print("Fault at getting level of flight")    
+    print("Fault at getting level of flight")    
     return -10
     
 
@@ -252,8 +253,8 @@ def find_terminal(arr_1, arr_2, arr_3, arr_4, prio_1, prio_2, prio_3, kindOfFlig
         # Check fault here and return value 
         if _position != -2:
             update_n_Apron(time_D)      # TODO:
-        # else:
-            # print("Fault at finding terminal", _position)
+        else:
+            print("Fault at finding terminal", _position)
         
         return _position, _level, min_objective
 
@@ -282,7 +283,7 @@ def find_terminal(arr_1, arr_2, arr_3, arr_4, prio_1, prio_2, prio_3, kindOfFlig
                     _position = idx
                     _level = temp_level
 
-    if (kindOfFlight == "AT72") or (kindOfFlight[0] == "B" and 400 <= int(kindOfFlight[1:4]) <= 747) or (kindOfFlight[0] == "A" and 340 <= int(kindOfFlight[1:4]) <= 600) or (kindOfFlight == "A321") or (kindOfFlight == "A320"):
+    if kindOfFlight != "AT72" and ((kindOfFlight[0] == "B" and 400 <= int(kindOfFlight[1:4]) <= 747) or (kindOfFlight[0] == "A" and 340 <= int(kindOfFlight[1:4]) <= 600)):
         for idx in arr_3:
             temp_level = get_level_from_position(idx)                                # <FIX>
             temp_objective = Objective_Function(kindOfFlight, var_time, idx, isVN)   # <FIX>
@@ -292,17 +293,18 @@ def find_terminal(arr_1, arr_2, arr_3, arr_4, prio_1, prio_2, prio_3, kindOfFlig
                 _level = temp_level
 
     # The rest of flights
-    for idx in arr_4:
-        temp_level = get_level_from_position(idx)                                # <FIX>
-        temp_objective = Objective_Function(kindOfFlight, var_time, idx, isVN)   # <FIX>
-        if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-            min_objective = temp_objective
-            _position = idx
-            _level = temp_level
+    if kindOfFlight != "AT72" and (kindOfFlight[0] == "B" and 200 <= int(kindOfFlight[1:4]) <= 900):
+        for idx in arr_4:
+            temp_level = get_level_from_position(idx)                                # <FIX>
+            temp_objective = Objective_Function(kindOfFlight, var_time, idx, isVN)   # <FIX>
+            if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
+                min_objective = temp_objective
+                _position = idx
+                _level = temp_level
 
     update_n_Apron(time_D)
     # if min_objective == 4:
-    #     print("It cannot find a suitable terminal")
+        # print("It cannot find a suitable terminal")
 
     return _position, _level, min_objective
 
@@ -314,248 +316,159 @@ arr_result = []
 arr_res1 = arr_res2 = arr_res3 = arr_res4 = arr_res5 = arr_res6 = arr_res7 = arr_res8 = arr_res9= arr_res10 = []
 arr_res11 = arr_res12 = arr_res13 = arr_res14 = arr_res15 = arr_res16 = arr_res17 = arr_res18 = arr_res19= arr_res20 = []
 arr_res21 = arr_res22 = arr_res23 = arr_res24 = arr_res25 = arr_res26 = arr_res27 = arr_res28 = arr_res29= arr_res30 = []
-for order_r in range(1, 21):
-    n_flights_apron = 0
-    indexFlight = 0
-    arr_res = []
-    arr_waiting_flight = []
+# for order_r in range(1, 21):
 
-    arr_level_case1 = []
-    arr_level_case2 = []
-    arr_level_case3 = []
-    arr_level_case4 = []
-    sub.create_initial_level(arr_level_case1, len(arr_pos_case1), arr_level_case2, len(arr_pos_case2), arr_level_case3, len(arr_pos_case3), arr_level_case4, len(arr_pos_case4))
+n_flights_apron = 0
+indexFlight = 0
+arr_res = []
+arr_waiting_flight = []
 
-    arr_CurrPos1 = random.shuffle(arr_pos_case1)
-    arr_CurrPos2 = random.shuffle(arr_pos_case2)
-    arr_CurrPos3 = random.shuffle(arr_pos_case3)
-    arr_CurrPos4 = random.shuffle(arr_pos_case4)
-    arr_CurrPri1 = random.shuffle(arr_priority_1)
-    arr_CurrPri2 = random.shuffle(arr_priority_2)
-    arr_CurrPri3 = random.shuffle(arr_priority_3)
-    arr_CurrPos1 = arr_pos_case1
-    arr_CurrPos2 = arr_pos_case2
-    arr_CurrPos3 = arr_pos_case3
-    arr_CurrPos4 = arr_pos_case4
-    arr_CurrPri1 = arr_priority_1
-    arr_CurrPri2 = arr_priority_2
-    arr_CurrPri3 = arr_priority_3
+arr_level_case1 = []
+arr_level_case2 = []
+arr_level_case3 = []
+arr_level_case4 = []
+sub.create_initial_level(arr_level_case1, len(arr_pos_case1), arr_level_case2, len(arr_pos_case2), arr_level_case3, len(arr_pos_case3), arr_level_case4, len(arr_pos_case4))
 
-    for time_minute in range(0, 1440):
-        while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
-            # IGNORE FLIGHT IF IT'S INVALID
-            while isValidFlight(indexFlight) == False:
-                indexFlight += 1
+arr_CurrPos1 = random.shuffle(arr_pos_case1)
+arr_CurrPos2 = random.shuffle(arr_pos_case2)
+arr_CurrPos3 = random.shuffle(arr_pos_case3)
+arr_CurrPos4 = random.shuffle(arr_pos_case4)
+arr_CurrPri1 = random.shuffle(arr_priority_1)
+arr_CurrPri2 = random.shuffle(arr_priority_2)
+arr_CurrPri3 = random.shuffle(arr_priority_3)
+arr_CurrPos1 = arr_pos_case1
+arr_CurrPos2 = arr_pos_case2
+arr_CurrPos3 = arr_pos_case3
+arr_CurrPos4 = arr_pos_case4
+arr_CurrPri1 = arr_priority_1
+arr_CurrPri2 = arr_priority_2
+arr_CurrPri3 = arr_priority_3
+
+for time_minute in range(0, 1440):
+    while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
+        # IGNORE FLIGHT IF IT'S INVALID
+        while isValidFlight(indexFlight) == False:
+            indexFlight += 1
+        
+        # CASE 1 ----- [?--SGN--?]
+        if arr_schedule[indexFlight] == '1':
+            # 1. Find a suitable position            
+            pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]))
+
+            # 2. Update again level with time_Departure
+            newlevel = arr_timeDeparture[indexFlight]
+            update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
+
+            # 3. Add the flight to the result
+            _final_l = round(final_l, 6)
+            arr_res.append([indexFlight, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][1], _final_l, _final_l])
+
+            # 4. Next Flight
+            indexFlight += 1
+        
+        # CASE 2 ----- [SGN--?--SGN]
+        if arr_schedule[indexFlight] == '2':
+            ##--------------------- PHASE 1 ---------------------##
+            # 1. Find a suitable position
+            pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]))
+
+            # 2. Add the flight to a just found position
+            # 2.1 UPDATE time_A and time_D
+            time_A = 0
+            if level == 0:
+                time_A = -1
+            else:
+                time_A = level
+            time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
+
+            # 2.2 Get the previous flight 
+            kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
+
+            # 3. UPDATE NEW LEVEL HERE 
+            newlevel = time_D
+            update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0])
+
+            # 4. Adding the result_array
+            _final_l = round(final_l, 6)
+            arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], _final_l, _final_l])
             
-            # CASE 1 ----- [?--SGN--?]
-            if arr_schedule[indexFlight] == '1':
-                # 1. Find a suitable position            
-                pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]))
-                if pos != -2:
-                    # 2. Update again level with time_Departure
-                    newlevel = arr_timeDeparture[indexFlight]
-                    update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
-
-                    # 3. Add the flight to the result
-                    arr_res.append([indexFlight, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][1], final_l, final_l])
-
-                # 4. Next Flight
-                indexFlight += 1
+            ##--------------------- PHASE 2 ---------------------##
+            ### Getting "ONLY" the second flight to queue
+            flightNO_temp = ''
+            if len(dfr[1][indexFlight]) == 4:
+                flightNO_temp = dfr[1][indexFlight]
+            elif len(dfr[1][indexFlight]) == 9:
+                flightNO_temp = dfr[1][indexFlight][5:9]
+            else:                                       # <FIX> -- maybe delete this line
+                print("Get len df [1][index] fault")    # <FIX> -- maybe delete this line
             
-            # CASE 2 ----- [SGN--?--SGN]
-            if arr_schedule[indexFlight] == '2':
-                ##--------------------- PHASE 1 ---------------------##
-                # 1. Find a suitable position
-                pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]))
-                if pos != -2:
-                    # 2. Add the flight to a just found position
-                    # 2.1 UPDATE time_A and time_D
-                    time_A = 0
-                    if level == 0:
-                        time_A = -1
-                    else:
-                        time_A = level
-                    time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
+            ### Adding 
+            arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][1], flightNO_temp, str(arr_last_colum[indexFlight])])
 
-                    # 2.2 Get the previous flight 
-                    kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
-
-                    # 3. UPDATE NEW LEVEL HERE 
-                    newlevel = time_D
-                    update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0])
-
-                    # 4. Adding the result_array
-                    arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], final_l, final_l])
-                    
-                    ##--------------------- PHASE 2 ---------------------##
-                    ### Getting "ONLY" the second flight to queue
-                    flightNO_temp = ''
-                    if len(dfr[1][indexFlight]) == 4:
-                        flightNO_temp = dfr[1][indexFlight]
-                    elif len(dfr[1][indexFlight]) == 9:
-                        flightNO_temp = dfr[1][indexFlight][5:9]
-                    else:                                       # <FIX> -- maybe delete this line
-                        print("Get len df [1][index] fault")    # <FIX> -- maybe delete this line
-                    
-                    ### Adding 
-                    arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][1], flightNO_temp, str(arr_last_colum[indexFlight])])
-
-                    ### ALWAYS SORT WHEN ADD FLIGHT TO WAITING_FLIGHT
-                    try:
-                        arr_waiting_flight.sort(key=sub.takeOne)  # OKAY
-                    except:
-                        print("Fault sorted")
-
-                # 5. Next flight
-                indexFlight += 1
-
-            # CASE 3 ----- [SGN--?]
-            if arr_schedule[indexFlight] == '3':
-                # 1. Find a suitable position
-                pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]))
-                if pos != -2:
-                    # 2. Add the flight to a just found position
-                    # 2.1 UPDATE time_A and time_D
-                    time_A = 0
-                    if level == 0:
-                        time_A = -1
-                    else:
-                        time_A = level
-                    time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
-
-                    # 2.2 Get the previous flight 
-                    kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
-
-                    # 3. UPDATE NEW LEVEL HERE 
-                    newlevel = time_D
-                    update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
-
-                    # 4. Adding the result_array
-                    arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], final_l, final_l])
-
-                # 5. Next flight 
-                indexFlight += 1
-
-            # CASE 4 ----- [?--SGN]
-            if arr_schedule[indexFlight] == '4':
-                # 1. Add flight to waiting array
-                arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][0], dfr[1][indexFlight], str(arr_last_colum[indexFlight])])
-                
-                # 2. Next flight
-                indexFlight += 1  
-
-            ########################################################################################################
-            ########################################################################################################
-            # ADD "flight in queue" to "the head of flight" 
+            ### ALWAYS SORT WHEN ADD FLIGHT TO WAITING_FLIGHT
             try:
-                while time_minute == arr_waiting_flight[0][0]:  
-                    # 1. Find a suitable position
-                    pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, arr_waiting_flight[0][2], arr_waiting_flight[0][1], -1, arr_waiting_flight[0][0], arr_waiting_flight[0][3])
-                    
-                    # 2. UPDATE NEW LEVEL HERE 
-                    newlevel = arr_waiting_flight[0][0]
-                    update_level(pos, newlevel, arr_waiting_flight[0][2], arr_waiting_flight[0][1])
-
-                    # 3. Remove the first element in waiting flights array
-                    arr_waiting_flight.remove([arr_waiting_flight[0][0], arr_waiting_flight[0][1], arr_waiting_flight[0][2], arr_waiting_flight[0][3]])     
+                arr_waiting_flight.sort(key=sub.takeOne)  # OKAY
             except:
-                print("Fault at processing waiting flight", time_minute)    
+                print("Fault sorted")
 
-    if order_r == 1:
-        arr_res1 = arr_res
-    if order_r == 2:
-        arr_res2 = arr_res
-    elif order_r == 3:
-        arr_res3 = arr_res
-    elif order_r == 4:
-        arr_res4 = arr_res
-    elif order_r == 5:
-        arr_res5 = arr_res
-    elif order_r == 6:
-        arr_res6 = arr_res
-    elif order_r == 7:
-        arr_res7 = arr_res
-    elif order_r == 8:
-        arr_res8 = arr_res
-    elif order_r == 9:
-        arr_res9 = arr_res
-    elif order_r == 10:
-        arr_res10 = arr_res
-    elif order_r == 11:
-        arr_res11 = arr_res
-    elif order_r == 12:
-        arr_res12 = arr_res
-    elif order_r == 13:
-        arr_res13 = arr_res
-    elif order_r == 14:
-        arr_res14 = arr_res
-    elif order_r == 15:
-        arr_res15 = arr_res
-    elif order_r == 16:
-        arr_res16 = arr_res
-    elif order_r == 17:
-        arr_res17 = arr_res
-    elif order_r == 18:
-        arr_res18 = arr_res
-    elif order_r == 19:
-        arr_res19 = arr_res
-    elif order_r == 20:
-        arr_res20 = arr_res
+            # 5. Next flight
+            indexFlight += 1
 
-# Crossing over 
-arr_result = random.choice([arr_res1, arr_res2, arr_res3, arr_res4, arr_res5, arr_res6, arr_res7, arr_res6, arr_res9, arr_res10, arr_res11, arr_res12, arr_res13, arr_res14, arr_res5, arr_res16, arr_res17, arr_res18, arr_res19, arr_res20])
-count_thesameTime = 1
-valueCurrent = 0
-run = 0 # ~~~ index_flights
-for flight_t in arr_result:
-    if flight_t[3] == valueCurrent:
-        count_thesameTime += 1
-    else:
-        if count_thesameTime != 1:
-            # TODO:
-            temp_value_1 = count_thesameTime
-            for crossOver_1 in range(0, count_thesameTime):
-                chromosome1 = arr_result[run - temp_value_1]
-                temp_value_2 = count_thesameTime
+        # CASE 3 ----- [SGN--?]
+        if arr_schedule[indexFlight] == '3':
+            # 1. Find a suitable position
+            pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]))
+            
+            # 2. Add the flight to a just found position
+            # 2.1 UPDATE time_A and time_D
+            time_A = 0
+            if level == 0:
+                time_A = -1
+            else:
+                time_A = level
+            time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
 
-                for crossOver_2 in range(0, count_thesameTime):
-                    arr_next = random.choice([arr_res1, arr_res2, arr_res3, arr_res4, arr_res5, arr_res6, arr_res7, arr_res6, arr_res9, arr_res10, arr_res11, arr_res12, arr_res13, arr_res14, arr_res5, arr_res16, arr_res17, arr_res18, arr_res19, arr_res20])
-                    chromosome2 = arr_next[run - temp_value_2]
+            # 2.2 Get the previous flight 
+            kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
 
-                    v1 = Objective_Function(chromosome1[6], chromosome1[3], 21, chromosome1[7])
-                    v2 = Objective_Function(chromosome2[6], chromosome2[3], 31, chromosome2[7])
-                    
-                    if v1 < chromosome1[9] or v2 < chromosome2[9]:
-                        chromosome1[9] = v1
-                        chromosome1[9] = v2
+            # 3. UPDATE NEW LEVEL HERE 
+            newlevel = time_D
+            update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
 
-                        var_4 = chromosome1[4]
-                        var_5 = chromosome1[5]
-                        var_6 = chromosome1[6]
-                        var_7 = chromosome1[7]
-                        
-                        chromosome1[4] = chromosome2[4]
-                        chromosome1[5] = chromosome2[5]
-                        chromosome1[6] = chromosome2[6]
-                        chromosome1[7] = chromosome2[7]
+            # 4. Adding the result_array
+            _final_l = round(final_l, 6)
+            arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], _final_l, _final_l])
 
-                        chromosome2[4] = var_4
-                        chromosome2[5] = var_5
-                        chromosome2[6] = var_6
-                        chromosome2[7] = var_7
+            # 5. Next flight 
+            indexFlight += 1
 
-                        arr_result[run - temp_value_1] = chromosome1
-                        arr_next[run - temp_value_2] = chromosome2
+        # CASE 4 ----- [?--SGN]
+        if arr_schedule[indexFlight] == '4':
+            # 1. Add flight to waiting array
+            arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][0], dfr[1][indexFlight], str(arr_last_colum[indexFlight])])
+            
+            # 2. Next flight
+            indexFlight += 1  
 
-                        # if v2 < chromosome2[9]: 
-                            # arr_result = arr_next
+        ########################################################################################################
+        ########################################################################################################
+        # ADD "flight in queue" to "the head of flight" 
+        try:
+            while time_minute == arr_waiting_flight[0][0]:  
+                # 1. Find a suitable position
+                pos, level, final_l = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_CurrPri3, arr_waiting_flight[0][2], arr_waiting_flight[0][1], -1, arr_waiting_flight[0][0], arr_waiting_flight[0][3])
+                
+                # 2. UPDATE NEW LEVEL HERE 
+                newlevel = arr_waiting_flight[0][0]
+                update_level(pos, newlevel, arr_waiting_flight[0][2], arr_waiting_flight[0][1])
 
-                    temp_value_2 += 1
-                temp_value_1 += 1
-            # END TODO:
-        count_thesameTime = 1
-        valueCurrent = flight_t[3]
-    run += 1
+                # 3. Remove the first element in waiting flights array
+                arr_waiting_flight.remove([arr_waiting_flight[0][0], arr_waiting_flight[0][1], arr_waiting_flight[0][2], arr_waiting_flight[0][3]])     
+        except:
+            print("Fault at processing waiting flight", time_minute)    
+
+arr_result = arr_res
+
 
 ####################################################################################################################################
 ####################################################################################################################################
@@ -569,3 +482,64 @@ if len(arr_codeFlights) == len(arr_schedule) == len(arr_timeDeparture) == len(ar
 stop = timeit.default_timer()
 print('Time: ', stop - start)  
 print("Count_loop:", count_loop)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # Crossing over 
+# arr_result = random.choice([arr_res1, arr_res2, arr_res3, arr_res4, arr_res5, arr_res6, arr_res7, arr_res6, arr_res9, arr_res10, arr_res11, arr_res12, arr_res13, arr_res14, arr_res5, arr_res16, arr_res17, arr_res18, arr_res19, arr_res20])
+# count_thesameTime = 1
+# valueCurrent = 0
+# run = 0 # ~~~ index_flights
+# for flight_t in arr_result:
+#     if flight_t[3] == valueCurrent:
+#         count_thesameTime += 1
+#     else:
+#         if count_thesameTime != 1:
+#             # TODO:
+#             temp_value_1 = count_thesameTime
+#             for crossOver_1 in range(0, count_thesameTime):
+#                 chromosome1 = arr_result[run - temp_value_1]
+#                 temp_value_2 = count_thesameTime
+#                 for crossOver_2 in range(0, count_thesameTime):
+#                     arr_next = random.choice([arr_res1, arr_res2, arr_res3, arr_res4, arr_res5, arr_res6, arr_res7, arr_res6, arr_res9, arr_res10, arr_res11, arr_res12, arr_res13, arr_res14, arr_res5, arr_res16, arr_res17, arr_res18, arr_res19, arr_res20])
+#                     chromosome2 = arr_next[run - temp_value_2]
+#                     # Cross Over process here 
+#                     v1 = Objective_Function(chromosome1[6], chromosome1[3], chromosome2[5], chromosome1[7])
+#                     v2 = Objective_Function(chromosome2[6], chromosome2[3], chromosome1[5], chromosome2[7])
+
+#                     exchangeMode = False
+#                     if v1 < chromosome1[9]:
+#                         chromosome1[9] = round(v1-2, 8)
+#                         exchangeMode = True
+#                     if v2 < chromosome2[9]:
+#                         chromosome2[9] = round(v2-2, 8)
+#                         # if exchangeMode == False:
+#                             # arr_result = arr_next
+#                         exchangeMode = True
+#                     # Exchange process 
+#                     # if exchangeMode == True:
+#                     #     tempOne = chromosome1[6]
+#                     #     tempTwo = chromosome1[7]
+#                     #     chromosome1[6] = chromosome2[6]
+#                     #     chromosome1[7] = chromosome2[7] 
+#                     #     chromosome2[6] = tempOne
+#                     #     chromosome2[7] = tempTwo
+
+#                     #     exchangeMode = False
+
+#                     temp_value_2 += 1
+#                 temp_value_1 += 1
+#             # END TODO:
+#         count_thesameTime = 1
+#         valueCurrent = flight_t[3]
+#     run += 1

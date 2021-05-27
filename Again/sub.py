@@ -9,6 +9,10 @@ def takeOne(elem):
     return elem[0]
 
 
+def takeThree(elem):
+    return elem[3]
+
+
 # FUNC: Check the next day 
 def next_day(string):
     for i in range(0, len(string)):
@@ -120,30 +124,6 @@ def findTaxi(position):
             else:
                 print("Position wasnot exist in finding TAXI at", position)
                 return -1, -1
-
-
-#######################################################################################################################
-############################## ------ LOUNGE_ARRAY --> df_lounge  ------ ##############################################
-df_lounge = pd.read_csv('lounge.csv', sep=';', header=None)
-numberOfLounge = len(df_lounge.iloc[:, 0])
-arr_lounge = []
-# print(df_taxi)
-
-for var_lounge in range(0, numberOfLounge):
-    try:
-        arr_lounge.append([df_lounge[1][var_lounge], int(df_lounge[8][var_lounge]), int(df_lounge[3][var_lounge])])
-    except:
-        arr_lounge.append([df_lounge[1][var_lounge], 1, 1])
-
-
-# After running this code, you will not receive any_case
-def findPassenger(nameOfFlight):
-    for temp_lounge in arr_lounge:
-        if temp_lounge[0] == nameOfFlight:
-            return temp_lounge[1], temp_lounge[2]
-    
-    # print("Fault at finding Passenger")
-    return -1, -1
 
 
 def create_initial_level(arr_1, len_1, arr_2, len_2, arr_3, len_3, arr_4, len_4):
