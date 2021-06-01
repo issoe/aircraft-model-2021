@@ -597,8 +597,10 @@ except:
 count_CrossOver = 0
 indexFlight_t = 0
 arr_result = arr_res1
+arr_final_result = []
 
 while arr_result[indexFlight_t][3] == -5:
+    arr_final_result.append([indexFlight_t + 1, arr_result[indexFlight_t][1], arr_result[indexFlight_t][2], arr_result[indexFlight_t][3], arr_result[indexFlight_t][4], arr_result[indexFlight_t][5], arr_result[indexFlight_t][6], arr_result[indexFlight_t][7]])
     indexFlight_t += 1
 
 for time_minute in range(0, 1440):
@@ -978,14 +980,16 @@ for time_minute in range(0, 1440):
                 arr_statictis[0] = arr_statictis[1]
                 arr_res1 = arr_res2
 
+        arr_final_result.append([indexFlight_t + 1, arr_res2[indexFlight_t][1], arr_res2[indexFlight_t][2], arr_res2[indexFlight_t][3], arr_res2[indexFlight_t][4], arr_res2[indexFlight_t][5], arr_res2[indexFlight_t][6], arr_res2[indexFlight_t][7]])
         indexFlight_t += 1
 
-
+for row in arr_final_result:
+    print(row)
 
 ####################################################################################################################################
 ####################################################################################################################################
 if len(arr_codeFlights) == len(arr_schedule) == len(arr_timeDeparture) == len(arr_timeArrival) == len(arr_last_colum):
-    print("Input Okay\n")
+    print("\nInput Okay")
 print("-------- Result---------------")
 print("Remove parking:", arr_statictis[0][0])
 print("Average taxi:", arr_statictis[0][3] / arr_statictis[0][2])
