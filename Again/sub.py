@@ -143,3 +143,55 @@ def create_initial_level(arr_1, len_1, arr_2, len_2, arr_3, len_3, arr_4, len_4)
 ################################################################################################################################
                 
 
+def count_removeParking(pos1, pos2, pos3, pos4, level1, level2, level3, level4, prio3):
+    sum = 0
+    average_Taxi = 0
+
+    for idx in range(0, len(pos1)):
+        if level1[idx][0] != -5:
+            average_Taxi += pos1[idx]
+            sum += 1
+
+    for idx in range(0, len(pos2)):
+        if level2[idx][0] != -5:
+            average_Taxi += pos2[idx]
+            sum += 1
+
+    for idx in range(0, len(pos3)):
+        if level3[idx][0] != -5:
+            average_Taxi += pos3[idx]
+            sum += 1
+
+    for idx in range(0, len(pos4)):
+        if level4[idx][0] != -5:
+            average_Taxi += pos4[idx]
+            sum += 1
+
+    for idx in prio3:
+        for idx2 in range(0, len(pos3)):
+            if idx == pos3[idx2] and level3[idx2][0] != -5:
+                sum -= 1
+
+    return sum, average_Taxi
+
+def swap_chromosome(idxFlight, ar_res1, ar_res2):
+    temp_1 = ar_res1[idxFlight][1]
+    temp_2 = ar_res1[idxFlight][2]
+    ar_res1[idxFlight][1] = ar_res2[idxFlight][1]
+    ar_res1[idxFlight][2] = ar_res2[idxFlight][2]
+    ar_res2[idxFlight][1] = temp_1
+    ar_res2[idxFlight][2] = temp_2
+    
+    return
+
+
+
+        #     # chromosome1 = arr_res1[indexFlight_t]
+        # # chromosome2 = arr_res2[indexFlight_t]
+        # temp_1 = arr_res1[indexFlight_t][1]
+        # temp_2 = arr_res1[indexFlight_t][2]
+        # arr_res1[indexFlight_t][1] = arr_res2[indexFlight_t][1]
+        # arr_res1[indexFlight_t][2] = arr_res2[indexFlight_t][2]
+        # arr_res2[indexFlight_t][1] = temp_1
+        # arr_res2[indexFlight_t][2] = temp_2
+        

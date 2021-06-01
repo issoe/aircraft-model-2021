@@ -20,6 +20,10 @@ n_flights_apron = 0
 count_loop = 0
 time_break = 25
 
+glo_value_ObjectiveFunction = 0
+glo_count_CallObjective = 0
+glo_removeParking = 0
+arr_statictis = []
 ####################################################################################################################################
 #################################### ------ MEASURE TIME EXECUTION  ------ #########################################################
 import timeit
@@ -185,13 +189,33 @@ def update_n_Apron(timeCurrent):
     global n_flights_apron
 
     # Count again
-    numberOfApron = 0
+    numberOfRemovePark = 0
+    for idx in arr_CurrPos1: # Find all in case 1, 2, 3, 4, and minus apron 
+        temp_level = get_level_from_position(idx)
+        if (temp_level + time_break) > timeCurrent:
+            numberOfRemovePark += 1
+
+    for idx in arr_CurrPos2:
+        temp_level = get_level_from_position(idx)
+        if (temp_level + time_break) > timeCurrent:
+            numberOfRemovePark += 1
+    
+    for idx in arr_CurrPos3:
+        temp_level = get_level_from_position(idx)
+        if (temp_level + time_break) > timeCurrent:
+            numberOfRemovePark += 1
+
+    for idx in arr_CurrPos4:
+        temp_level = get_level_from_position(idx)
+        if (temp_level + time_break) > timeCurrent:
+            numberOfRemovePark += 1
+
     for idx in arr_priority_3:
         temp_level = get_level_from_position(idx)
         if (temp_level + time_break) > timeCurrent:
-            numberOfApron += 1
+            numberOfRemovePark -= 1
 
-    n_flights_apron = numberOfApron
+    n_flights_apron = numberOfRemovePark
 
 def Objective_Function(position, n_flights_waiting_g):
     global w_1, w_2, w_3, count_loop, n_flights_apron, numberOfFlights
@@ -208,8 +232,19 @@ def Objective_Function(position, n_flights_waiting_g):
 
     return v_object, n_flights_apron, round(R_Taxi, 8), n_flights_waiting_g
 
+def glo_Objective_Function(var_idx, arr_1, ele1, ele2, stat):
+    tempOne = arr_1[var_idx][1] 
+    tempTwo = arr_1[var_idx][2]
+    arr_1[var_idx][1] = ele1
+    arr_1[var_idx][2] = ele2
+    valu, _, _, _ = Objective_Function(arr_1[var_idx][5], 0)
+    valu += stat[1] # minus what????
 
-def find_terminal(arr_1, arr_2, arr_3, arr_4, prio_1, prio_2, kindOfFlight, isVN, time_A, time_D, last_colum, n_waiting):
+    arr_1[var_idx][1] = tempOne
+    arr_1[var_idx][2] = tempTwo
+    return valu / stat[2]
+
+def find_terminal(kindOfFlight, isVN, time_A, time_D, last_colum, n_waiting):
     # 1. Check the priority of "APU"
     mode_APU = False
     temp_APU = re.sub("[^0-9]", "", isVN)       # get the number from a string "isVN"
@@ -224,111 +259,72 @@ def find_terminal(arr_1, arr_2, arr_3, arr_4, prio_1, prio_2, kindOfFlight, isVN
         var_time = time_A
 
     # 3. Run the code with the priority first -- [If terminal was found in this case, it will return IMMEDIATELY]
-    _position = -2
-    _level = -2
-    min_objective = 4
-    __R1 =  __R2 =  __R3 = 0
+    min_objective = 3
 
     if (((time_A != -1) and (60 < (time_D - time_A) < 90)) or (time_A == -1)) and (kindOfFlight != "A320") and (kindOfFlight != "A321") and (kindOfFlight != "AT72"):
         if isVN[0:2] == "VN":
-            for idx in prio_1:      # idx = position
+            for idx in arr_CurrPri1:      # idx = position
                 temp_level = get_level_from_position(idx)                             
                 temp_objective, _RR1, _RR2, _RR3 = Objective_Function(idx, n_waiting) 
-                if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-                    __R1 = _RR1
-                    __R2 = _RR2
-                    __R3 = _RR3
-                    min_objective = temp_objective
-                    _position = idx
-                    _level = temp_level
+                if (temp_objective < min_objective) and ((temp_level + time_break) < var_time): 
+                    update_n_Apron(time_D)     
+                    return idx, temp_level, temp_objective, _RR1, _RR2, _RR3
+
         else:
-            for idx in prio_2:
+            for idx in arr_CurrPri2:
                 temp_level = get_level_from_position(idx)                              
                 temp_objective, _RR1, _RR2, _RR3 = Objective_Function(idx, n_waiting)  
                 if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-                    __R1 = _RR1
-                    __R2 = _RR2
-                    __R3 = _RR3
-                    min_objective = temp_objective
-                    _position = idx
-                    _level = temp_level
-        
-        # Check fault here and return value 
-        if _position != -2:
-            update_n_Apron(time_D)      # TODO:
-            return _position, _level, min_objective, __R1, __R2, __R3
-        else:
-            print("Fault at finding terminal", _position)
-        
-    # 4. Run the code without the priority
-    _position = -2
-    _level = -2
-    min_objective = 4
-    __R1 =  __R2 =  __R3 = 0
+                    update_n_Apron(time_D) 
+                    return idx, temp_level, temp_objective, _RR1, _RR2, _RR3
 
+    # 4. Run the code without the priority
     if kindOfFlight == "A320" or kindOfFlight == "AT72":
-        for idx in arr_1:
+        for idx in arr_CurrPos1:
             temp_level = get_level_from_position(idx)        
             temp_objective, _RR1, _RR2, _RR3 = Objective_Function(idx, n_waiting)         
             if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-                __R1 = _RR1
-                __R2 = _RR2
-                __R3 = _RR3
-                min_objective = temp_objective
-                _position = idx
-                _level = temp_level
-    
+                update_n_Apron(time_D)
+                return idx, temp_level, temp_objective, _RR1, _RR2, _RR3
+
     if kindOfFlight == "A321" or kindOfFlight == "A320" or kindOfFlight == "AT72":
-        for idx in arr_2:
+        for idx in arr_CurrPos2:
             if (mode_APU == True) and (idx == 37 or idx == 38 or idx == 40 or idx == 41 or idx == 42 or idx == 43):
                 continue
             else:
                 temp_level = get_level_from_position(idx)                              
                 temp_objective, _RR1, _RR2, _RR3 = Objective_Function(idx, n_waiting)                            
                 if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-                    __R1 = _RR1
-                    __R2 = _RR2
-                    __R3 = _RR3                    
-                    min_objective = temp_objective
-                    _position = idx
-                    _level = temp_level
+                    update_n_Apron(time_D)
+                    return idx, temp_level, temp_objective, _RR1, _RR2, _RR3
 
     if kindOfFlight != "AT72" and ((kindOfFlight[0] == "B" and 400 <= int(kindOfFlight[1:4]) <= 747) or (kindOfFlight[0] == "A" and 340 <= int(kindOfFlight[1:4]) <= 600)):
-        for idx in arr_3:
+        for idx in arr_CurrPos3:
             temp_level = get_level_from_position(idx) 
             temp_objective, _RR1, _RR2, _RR3 = Objective_Function(idx, n_waiting)  
             if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-                __R1 = _RR1
-                __R2 = _RR2
-                __R3 = _RR3                
-                min_objective = temp_objective
-                _position = idx
-                _level = temp_level
+                update_n_Apron(time_D)
+                return idx, temp_level, temp_objective, _RR1, _RR2, _RR3
 
     # The rest of flights
     if kindOfFlight != "AT72" and (kindOfFlight[0] == "B" and 200 <= int(kindOfFlight[1:4]) <= 900):
-        for idx in arr_4:
+        for idx in arr_CurrPos4:
             temp_level = get_level_from_position(idx)  
             temp_objective, _RR1, _RR2, _RR3 = Objective_Function(idx, n_waiting)   
             if (temp_objective < min_objective) and ((temp_level + time_break) < var_time):
-                __R1 = _RR1
-                __R2 = _RR2
-                __R3 = _RR3                
-                min_objective = temp_objective
-                _position = idx
-                _level = temp_level
-
-    update_n_Apron(time_D)
-    if min_objective == 4:
-        print("It cannot find a suitable terminal")
-
-    return _position, _level, min_objective, __R1, __R2, __R3
+                update_n_Apron(time_D)
+                return idx, temp_level, temp_objective, _RR1, _RR2, _RR3    
+    
+    print("It cannot find a suitable terminal:", kindOfFlight, isVN, time_A, time_D, last_colum, n_waiting)
+    return -2, -2, 4, 0, 0, 0
 
 
 ####################################################################################################################################
 #################################### ------ Driver code  ------ ##############
 # Create 20 set of chromosome 
 arr_result = []
+
+
 arr_res1 = arr_res2 = arr_res3 = arr_res4 = arr_res5 = arr_res6 = arr_res7 = arr_res8 = arr_res9= arr_res10 = []
 arr_res11 = arr_res12 = arr_res13 = arr_res14 = arr_res15 = arr_res16 = arr_res17 = arr_res18 = arr_res19= arr_res20 = []
 arr_res21 = arr_res22 = arr_res23 = arr_res24 = arr_res25 = arr_res26 = arr_res27 = arr_res28 = arr_res29= arr_res30 = []
@@ -336,6 +332,10 @@ arr_res21 = arr_res22 = arr_res23 = arr_res24 = arr_res25 = arr_res26 = arr_res2
 for order_r in range(1, 21):
     n_flights_apron = 0
     indexFlight = 0
+    glo_value_ObjectiveFunction = 0
+    glo_count_CallObjective = 0
+    glo_removeParking = 0
+
     arr_res = []
     arr_waiting_flight = []
 
@@ -345,12 +345,12 @@ for order_r in range(1, 21):
     arr_level_case4 = []
     sub.create_initial_level(arr_level_case1, len(arr_pos_case1), arr_level_case2, len(arr_pos_case2), arr_level_case3, len(arr_pos_case3), arr_level_case4, len(arr_pos_case4))
 
-    arr_CurrPos1 = random.shuffle(arr_pos_case1)
-    arr_CurrPos2 = random.shuffle(arr_pos_case2)
-    arr_CurrPos3 = random.shuffle(arr_pos_case3)
-    arr_CurrPos4 = random.shuffle(arr_pos_case4)
-    arr_CurrPri1 = random.shuffle(arr_priority_1)
-    arr_CurrPri2 = random.shuffle(arr_priority_2)
+    random.shuffle(arr_pos_case1)
+    random.shuffle(arr_pos_case2)
+    random.shuffle(arr_pos_case3)
+    random.shuffle(arr_pos_case4)
+    random.shuffle(arr_priority_1)
+    random.shuffle(arr_priority_2)
 
     arr_CurrPos1 = arr_pos_case1
     arr_CurrPos2 = arr_pos_case2
@@ -379,7 +379,9 @@ for order_r in range(1, 21):
                 n_waiting_gg = num1 if (num1 > num2) else num2
                     
                 # 1. Find a suitable position            
-                pos, level, final_l, _R1, _R2, _R3 = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+                pos, level, final_l, _R1, _R2, _R3 = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+                glo_value_ObjectiveFunction += final_l
+                glo_count_CallObjective += 1
 
                 # 2. Update again level with time_Departure
                 newlevel = arr_timeDeparture[indexFlight]
@@ -407,7 +409,9 @@ for order_r in range(1, 21):
                 n_waiting_gg = num1 if (num1 > num2) else num2
 
                 # 1. Find a suitable position
-                pos, level, final_l, _R1, _R2, _R3  = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+                pos, level, final_l, _R1, _R2, _R3  = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+                glo_value_ObjectiveFunction += final_l
+                glo_count_CallObjective += 1
 
                 # 2. Add the flight to a just found position
                 # 2.1 UPDATE time_A and time_D
@@ -465,8 +469,10 @@ for order_r in range(1, 21):
                 n_waiting_gg = num1 if (num1 > num2) else num2
 
                 # 1. Find a suitable position
-                pos, level, final_l, _R1, _R2, _R3  = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
-                
+                pos, level, final_l, _R1, _R2, _R3  = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+                glo_value_ObjectiveFunction += final_l
+                glo_count_CallObjective += 1
+
                 # 2. Add the flight to a just found position
                 # 2.1 UPDATE time_A and time_D
                 time_A = 0
@@ -503,7 +509,7 @@ for order_r in range(1, 21):
             try:
                 while time_minute == arr_waiting_flight[0][0]:  
                     # 1. Find a suitable position
-                    pos, level, final_l, _, _, _ = find_terminal(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_CurrPri1, arr_CurrPri2, arr_waiting_flight[0][2], arr_waiting_flight[0][1], -1, arr_waiting_flight[0][0], arr_waiting_flight[0][3], n_waiting_gg)
+                    pos, level, final_l, _, _, _ = find_terminal(arr_waiting_flight[0][2], arr_waiting_flight[0][1], -1, arr_waiting_flight[0][0], arr_waiting_flight[0][3], n_waiting_gg)
                     
                     # 2. UPDATE NEW LEVEL HERE 
                     newlevel = arr_waiting_flight[0][0]
@@ -512,7 +518,13 @@ for order_r in range(1, 21):
                     # 3. Remove the first element in waiting flights array
                     arr_waiting_flight.remove([arr_waiting_flight[0][0], arr_waiting_flight[0][1], arr_waiting_flight[0][2], arr_waiting_flight[0][3]])     
             except:
-                print("Fault at processing waiting flight", time_minute)    
+                print("Fault at processing waiting flight", time_minute)
+
+    # Statistics
+    glo_removeParking, sumTaxi = sub.count_removeParking(arr_CurrPos1, arr_CurrPos2, arr_CurrPos3, arr_CurrPos4, arr_level_case1, arr_level_case2, arr_level_case3, arr_level_case4, arr_priority_3)
+
+    arr_statictis.append([glo_removeParking, glo_value_ObjectiveFunction, glo_count_CallObjective, sumTaxi])
+
 
     if order_r == 1:
         arr_res1 = arr_res
@@ -555,63 +567,431 @@ for order_r in range(1, 21):
     elif order_r == 20:
         arr_res20 = arr_res
 
+# Sort
+try:
+    arr_res1.sort(key = sub.takeThree)
+    arr_res2.sort(key = sub.takeThree)
+    arr_res3.sort(key = sub.takeThree)
+    arr_res4.sort(key = sub.takeThree)
+    arr_res5.sort(key = sub.takeThree)
+    arr_res6.sort(key = sub.takeThree)
+    arr_res7.sort(key = sub.takeThree)
+    arr_res8.sort(key = sub.takeThree)
+    arr_res9.sort(key = sub.takeThree)
+    arr_res10.sort(key = sub.takeThree)
+    arr_res11.sort(key = sub.takeThree)
+    arr_res12.sort(key = sub.takeThree)
+    arr_res13.sort(key = sub.takeThree)
+    arr_res14.sort(key = sub.takeThree)
+    arr_res15.sort(key = sub.takeThree)
+    arr_res16.sort(key = sub.takeThree)
+    arr_res17.sort(key = sub.takeThree)
+    arr_res18.sort(key = sub.takeThree)
+    arr_res19.sort(key = sub.takeThree)
+    arr_res20.sort(key = sub.takeThree)
+
+except:
+    print("Fault sort at Crossing over ")
+
+# Crossing Over 
 count_CrossOver = 0
-# Crossing over 
-arr_result = random.choice([arr_res1, arr_res2, arr_res3, arr_res4, arr_res5, arr_res6, arr_res7, arr_res6, arr_res9, arr_res10, arr_res11, arr_res12, arr_res13, arr_res14, arr_res5, arr_res16, arr_res17, arr_res18, arr_res19, arr_res20])
-count_thesameTime = 1
-valueCurrent = -5
-run = 0 # ~~~ index_flights
-for flight_t in arr_result:
-    if flight_t[3] == valueCurrent:
-        count_thesameTime += 1
-    else:
-        if count_thesameTime != 1:
-            # TODO:
-            temp_value_1 = count_thesameTime
-            for crossOver_1 in range(0, count_thesameTime):
-                chromosome1 = arr_result[run - temp_value_1]
-                temp_value_2 = count_thesameTime
-                for crossOver_2 in range(0, count_thesameTime):
-                    arr_next = random.choice([arr_res1, arr_res2, arr_res3, arr_res4, arr_res5, arr_res6, arr_res7, arr_res6, arr_res9, arr_res10, arr_res11, arr_res12, arr_res13, arr_res14, arr_res5, arr_res16, arr_res17, arr_res18, arr_res19, arr_res20])
-                    chromosome2 = arr_next[run - temp_value_2]
-                    
-                    v1, _, _, _ = Objective_Function(chromosome2[5], 0)
-                    v2, _, _, _ = Objective_Function(chromosome1[5], 0)
+indexFlight_t = 0
+arr_result = arr_res1
 
-                    # ExchangeMode = False
-                    if v1 < chromosome1[11]:
-                        chromosome1[11] = round(v1, 8)
-                    elif v2 < chromosome2[11]:
-                        chromosome2[11] = round(v2, 8)
-                        arr_result = arr_next
+while arr_result[indexFlight_t][3] == -5:
+    indexFlight_t += 1
 
-                    # Exchange process 
-                    if v1 < chromosome1[11] or v2 < chromosome2[11]:
-                        tempOne = chromosome1[1]
-                        tempTwo = chromosome1[2]
-                        chromosome1[1] = chromosome2[1]
-                        chromosome1[2] = chromosome2[2] 
-                        chromosome2[1] = tempOne
-                        chromosome2[2] = tempTwo
-                    
-                    count_CrossOver += 1
-                    temp_value_2 += 1
-                temp_value_1 += 1
-            # END TODO:
-        count_thesameTime = 1
-        valueCurrent = flight_t[3]
-    run += 1
+for time_minute in range(0, 1440):
+    while time_minute == arr_result[indexFlight_t][3]:        
+        v1 = glo_Objective_Function(indexFlight_t, arr_res1, arr_res2[indexFlight_t][1], arr_res2[indexFlight_t][2], arr_statictis[0])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res2, arr_res1[indexFlight_t][1], arr_res1[indexFlight_t][2], arr_statictis[1])
+        v3 = (arr_statictis[0][1])/arr_statictis[0][2]
+        v4 = (arr_statictis[1][1])/arr_statictis[1][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res1 = arr_res2
+            arr_statictis[0] = arr_statictis[1]
+        elif max_value == v1 or max_value == v2:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res1, arr_res2)
+            if max_value == v2:
+                arr_statictis[0] = arr_statictis[1]
+                arr_res1 = arr_res2
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res3, arr_res4[indexFlight_t][1], arr_res4[indexFlight_t][2], arr_statictis[2])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res4, arr_res3[indexFlight_t][1], arr_res3[indexFlight_t][2], arr_statictis[3])
+        v3 = (arr_statictis[2][1])/arr_statictis[2][2]
+        v4 = (arr_statictis[3][1])/arr_statictis[3][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_statictis[1] = arr_statictis[3]
+            arr_res2 = arr_res4
+        elif max_value == v3:
+            arr_res2 = arr_res3
+            arr_statictis[1] = arr_statictis[2]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res3, arr_res4)
+            arr_res2 = arr_res3
+            arr_statictis[1] = arr_statictis[2]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res3, arr_res4)
+            arr_res2 = arr_res4
+            arr_statictis[1] = arr_statictis[3]
+            
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res5, arr_res6[indexFlight_t][1], arr_res6[indexFlight_t][2], arr_statictis[4])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res6, arr_res5[indexFlight_t][1], arr_res5[indexFlight_t][2], arr_statictis[5])
+        v3 = (arr_statictis[4][1])/arr_statictis[4][2]
+        v4 = (arr_statictis[5][1])/arr_statictis[5][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res3 = arr_res6
+            arr_statictis[2] = arr_statictis[5]
+        elif max_value == v3:
+            arr_res3 = arr_res5
+            arr_statictis[2] = arr_statictis[4]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res5, arr_res6)
+            arr_res3 = arr_res5
+            arr_statictis[2] = arr_statictis[4]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res5, arr_res6)
+            arr_res3 = arr_res6
+            arr_statictis[2] = arr_statictis[5]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res7, arr_res8[indexFlight_t][1], arr_res8[indexFlight_t][2], arr_statictis[6])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res8, arr_res7[indexFlight_t][1], arr_res7[indexFlight_t][2], arr_statictis[7])
+        v3 = (arr_statictis[6][1])/arr_statictis[6][2]  
+        v4 = (arr_statictis[7][1])/arr_statictis[7][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res4 = arr_res8
+            arr_statictis[3] = arr_statictis[7]
+        elif max_value == v3:
+            arr_res4 = arr_res7
+            arr_statictis[3] = arr_statictis[6]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res7, arr_res8)
+            arr_res4 = arr_res7
+            arr_statictis[3] = arr_statictis[6]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res7, arr_res8)
+            arr_res4 = arr_res8
+            arr_statictis[3] = arr_statictis[7]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res9, arr_res10[indexFlight_t][1], arr_res10[indexFlight_t][2], arr_statictis[8])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res10, arr_res9[indexFlight_t][1], arr_res9[indexFlight_t][2], arr_statictis[9])
+        v3 = (arr_statictis[8][1])/arr_statictis[8][2]  
+        v4 = (arr_statictis[9][1])/arr_statictis[9][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res5 = arr_res10
+            arr_statictis[4] = arr_statictis[9]
+        elif max_value == v3:
+            arr_res5 = arr_res9
+            arr_statictis[4] = arr_statictis[8]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res9, arr_res10)
+            arr_res5 = arr_res9
+            arr_statictis[4] = arr_statictis[8]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res9, arr_res10)
+            arr_res5 = arr_res10
+            arr_statictis[4] = arr_statictis[9]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res11, arr_res12[indexFlight_t][1], arr_res12[indexFlight_t][2], arr_statictis[10])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res12, arr_res11[indexFlight_t][1], arr_res11[indexFlight_t][2], arr_statictis[11])
+        v3 = (arr_statictis[10][1])/arr_statictis[10][2]  
+        v4 = (arr_statictis[11][1])/arr_statictis[11][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res6 = arr_res12
+            arr_statictis[5] = arr_statictis[11]
+        elif max_value == v3:
+            arr_res6 = arr_res11
+            arr_statictis[5] = arr_statictis[10]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res11, arr_res12)
+            arr_res6 = arr_res11
+            arr_statictis[5] = arr_statictis[10]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res11, arr_res12)
+            arr_res6 = arr_res12
+            arr_statictis[5] = arr_statictis[11]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res13, arr_res14[indexFlight_t][1], arr_res14[indexFlight_t][2], arr_statictis[12])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res14, arr_res13[indexFlight_t][1], arr_res13[indexFlight_t][2], arr_statictis[13])
+        v3 = (arr_statictis[12][1])/arr_statictis[12][2]  
+        v4 = (arr_statictis[13][1])/arr_statictis[13][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res7 = arr_res14
+            arr_statictis[6] = arr_statictis[13]
+        elif max_value == v3:
+            arr_res7 = arr_res13
+            arr_statictis[6] = arr_statictis[12]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res13, arr_res14)
+            arr_res7 = arr_res13
+            arr_statictis[6] = arr_statictis[12]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res13, arr_res14)
+            arr_res7 = arr_res14
+            arr_statictis[6] = arr_statictis[13]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res15, arr_res16[indexFlight_t][1], arr_res16[indexFlight_t][2], arr_statictis[14])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res16, arr_res15[indexFlight_t][1], arr_res15[indexFlight_t][2], arr_statictis[15])
+        v3 = (arr_statictis[14][1])/arr_statictis[14][2]  
+        v4 = (arr_statictis[15][1])/arr_statictis[15][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res8 = arr_res16
+            arr_statictis[7] = arr_statictis[15]
+        elif max_value == v3:
+            arr_res8 = arr_res15
+            arr_statictis[7] = arr_statictis[14]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res15, arr_res16)
+            arr_res8 = arr_res15
+            arr_statictis[7] = arr_statictis[14]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res15, arr_res16)
+            arr_res8 = arr_res16
+            arr_statictis[7] = arr_statictis[15]    
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res17, arr_res18[indexFlight_t][1], arr_res18[indexFlight_t][2], arr_statictis[16])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res18, arr_res17[indexFlight_t][1], arr_res17[indexFlight_t][2], arr_statictis[17])
+        v3 = (arr_statictis[16][1])/arr_statictis[16][2]  
+        v4 = (arr_statictis[17][1])/arr_statictis[17][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res9 = arr_res18
+            arr_statictis[8] = arr_statictis[17]
+        elif max_value == v3:
+            arr_res9 = arr_res17
+            arr_statictis[8] = arr_statictis[16]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res17, arr_res18)
+            arr_res9 = arr_res17
+            arr_statictis[8] = arr_statictis[16]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res17, arr_res18)
+            arr_res9 = arr_res18
+            arr_statictis[8] = arr_statictis[17]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res19, arr_res20[indexFlight_t][1], arr_res20[indexFlight_t][2], arr_statictis[18])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res20, arr_res19[indexFlight_t][1], arr_res19[indexFlight_t][2], arr_statictis[19])
+        v3 = (arr_statictis[18][1])/arr_statictis[18][2]  
+        v4 = (arr_statictis[19][1])/arr_statictis[19][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res10 = arr_res20
+            arr_statictis[9] = arr_statictis[19]
+        elif max_value == v3:
+            arr_res10 = arr_res19
+            arr_statictis[9] = arr_statictis[18]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res19, arr_res20)
+            arr_res10 = arr_res19
+            arr_statictis[9] = arr_statictis[18]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res19, arr_res20)
+            arr_res10 = arr_res20
+            arr_statictis[9] = arr_statictis[19]
+        ################################################################
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res1, arr_res2[indexFlight_t][1], arr_res2[indexFlight_t][2], arr_statictis[0])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res2, arr_res1[indexFlight_t][1], arr_res1[indexFlight_t][2], arr_statictis[1])
+        v3 = (arr_statictis[0][1])/arr_statictis[0][2]
+        v4 = (arr_statictis[1][1])/arr_statictis[1][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res1 = arr_res2
+            arr_statictis[0] = arr_statictis[1]
+        elif max_value == v1 or max_value == v2:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res1, arr_res2)
+            if max_value == v2:
+                arr_statictis[0] = arr_statictis[1]
+                arr_res1 = arr_res2
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res3, arr_res4[indexFlight_t][1], arr_res4[indexFlight_t][2], arr_statictis[2])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res4, arr_res3[indexFlight_t][1], arr_res3[indexFlight_t][2], arr_statictis[3])
+        v3 = (arr_statictis[2][1])/arr_statictis[2][2]
+        v4 = (arr_statictis[3][1])/arr_statictis[3][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_statictis[1] = arr_statictis[3]
+            arr_res2 = arr_res4
+        elif max_value == v3:
+            arr_res2 = arr_res3
+            arr_statictis[1] = arr_statictis[2]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res3, arr_res4)
+            arr_res2 = arr_res3
+            arr_statictis[1] = arr_statictis[2]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res3, arr_res4)
+            arr_res2 = arr_res4
+            arr_statictis[1] = arr_statictis[3]
+            
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res5, arr_res6[indexFlight_t][1], arr_res6[indexFlight_t][2], arr_statictis[4])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res6, arr_res5[indexFlight_t][1], arr_res5[indexFlight_t][2], arr_statictis[5])
+        v3 = (arr_statictis[4][1])/arr_statictis[4][2]
+        v4 = (arr_statictis[5][1])/arr_statictis[5][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res3 = arr_res6
+            arr_statictis[2] = arr_statictis[5]
+        elif max_value == v3:
+            arr_res3 = arr_res5
+            arr_statictis[2] = arr_statictis[4]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res5, arr_res6)
+            arr_res3 = arr_res5
+            arr_statictis[2] = arr_statictis[4]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res5, arr_res6)
+            arr_res3 = arr_res6
+            arr_statictis[2] = arr_statictis[5]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res7, arr_res8[indexFlight_t][1], arr_res8[indexFlight_t][2], arr_statictis[6])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res8, arr_res7[indexFlight_t][1], arr_res7[indexFlight_t][2], arr_statictis[7])
+        v3 = (arr_statictis[6][1])/arr_statictis[6][2]  
+        v4 = (arr_statictis[7][1])/arr_statictis[7][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res4 = arr_res8
+            arr_statictis[3] = arr_statictis[7]
+        elif max_value == v3:
+            arr_res4 = arr_res7
+            arr_statictis[3] = arr_statictis[6]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res7, arr_res8)
+            arr_res4 = arr_res7
+            arr_statictis[3] = arr_statictis[6]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res7, arr_res8)
+            arr_res4 = arr_res8
+            arr_statictis[3] = arr_statictis[7]
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res9, arr_res10[indexFlight_t][1], arr_res10[indexFlight_t][2], arr_statictis[8])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res10, arr_res9[indexFlight_t][1], arr_res9[indexFlight_t][2], arr_statictis[9])
+        v3 = (arr_statictis[8][1])/arr_statictis[8][2]  
+        v4 = (arr_statictis[9][1])/arr_statictis[9][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res5 = arr_res10
+            arr_statictis[4] = arr_statictis[9]
+        elif max_value == v3:
+            arr_res5 = arr_res9
+            arr_statictis[4] = arr_statictis[8]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res9, arr_res10)
+            arr_res5 = arr_res9
+            arr_statictis[4] = arr_statictis[8]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res9, arr_res10)
+            arr_res5 = arr_res10
+            arr_statictis[4] = arr_statictis[9]
+
+        ################################################################
+        
+        v1 = glo_Objective_Function(indexFlight_t, arr_res1, arr_res2[indexFlight_t][1], arr_res2[indexFlight_t][2], arr_statictis[0])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res2, arr_res1[indexFlight_t][1], arr_res1[indexFlight_t][2], arr_statictis[1])
+        v3 = (arr_statictis[0][1])/arr_statictis[0][2]
+        v4 = (arr_statictis[1][1])/arr_statictis[1][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res1 = arr_res2
+            arr_statictis[0] = arr_statictis[1]
+        elif max_value == v1 or max_value == v2:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res1, arr_res2)
+            if max_value == v2:
+                arr_statictis[0] = arr_statictis[1]
+                arr_res1 = arr_res2
+
+        v1 = glo_Objective_Function(indexFlight_t, arr_res3, arr_res4[indexFlight_t][1], arr_res4[indexFlight_t][2], arr_statictis[2])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res4, arr_res3[indexFlight_t][1], arr_res3[indexFlight_t][2], arr_statictis[3])
+        v3 = (arr_statictis[2][1])/arr_statictis[2][2]
+        v4 = (arr_statictis[3][1])/arr_statictis[3][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_statictis[1] = arr_statictis[3]
+            arr_res2 = arr_res4
+        elif max_value == v3:
+            arr_res2 = arr_res3
+            arr_statictis[1] = arr_statictis[2]
+        elif max_value == v1:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res3, arr_res4)
+            arr_res2 = arr_res3
+            arr_statictis[1] = arr_statictis[2]
+        else:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res3, arr_res4)
+            arr_res2 = arr_res4
+            arr_statictis[1] = arr_statictis[3]
+
+        ################################################################
+        
+        v1 = glo_Objective_Function(indexFlight_t, arr_res1, arr_res2[indexFlight_t][1], arr_res2[indexFlight_t][2], arr_statictis[0])
+        v2 = glo_Objective_Function(indexFlight_t, arr_res2, arr_res1[indexFlight_t][1], arr_res1[indexFlight_t][2], arr_statictis[1])
+        v3 = (arr_statictis[0][1])/arr_statictis[0][2]
+        v4 = (arr_statictis[1][1])/arr_statictis[1][2]
+        max_value = max(v1, v2, v3, v4)
+        if max_value == v4:
+            arr_res1 = arr_res2
+            arr_statictis[0] = arr_statictis[1]
+        elif max_value == v1 or max_value == v2:
+            count_CrossOver += 1
+            sub.swap_chromosome(indexFlight_t, arr_res1, arr_res2)
+            if max_value == v2:
+                arr_statictis[0] = arr_statictis[1]
+                arr_res1 = arr_res2
+
+        indexFlight_t += 1
+
+
 
 ####################################################################################################################################
 ####################################################################################################################################
-print("\n======Show the result======")
-for row in arr_result:
-    print(row)
-
-print("\n--------Statistics---------------")
 if len(arr_codeFlights) == len(arr_schedule) == len(arr_timeDeparture) == len(arr_timeArrival) == len(arr_last_colum):
-    print("Input Okay")
+    print("Input Okay\n")
+print("-------- Result---------------")
+print("Remove parking:", arr_statictis[0][0])
+print("Average taxi:", arr_statictis[0][3] / arr_statictis[0][2])
+print("Waiting flights:", '0')
+print("Objective_function value:", arr_statictis[0][1] / arr_statictis[0][2])
+
+print("\nNumber of Crossing over:", count_CrossOver)
 stop = timeit.default_timer()
 print('Time: ', stop - start)  
-print("Count_loop:", count_loop)
-print("Count_CrossOver:", count_CrossOver)
