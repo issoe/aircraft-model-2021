@@ -1,12 +1,12 @@
 ####################################################################################################################################
 #################################### ------ Import library  ------ #################################################################
-# from Users.khanhquang.Downloads.AirCraft_MODEL.Again.sub import takeThree
 import sub
 import pandas as pd
 import numpy as np
 import re
 import random
-from random import seed
+import csv
+# from random import seed
 from random import randint
 # seed(1)
 
@@ -32,7 +32,7 @@ start = timeit.default_timer()
 #################################### ------ DATA FRAME ARRAY --> dfr ------ #########################################################
 # NOTE: DATA INPUT MUST BE SORTED
 # 1. Read data from file "input.csv" and get the numberOfFlighs
-dfr = pd.read_csv('input.csv', sep=';', header=None)
+dfr = pd.read_csv('15.csv', sep=';', header=None)
 numberOfFlights = len(dfr.iloc[:, 0])
 
 # 2. Clean DATA and adding into array-s
@@ -75,7 +75,7 @@ arr_CurrPri2 = arr_priority_2
 
 
 # Array contained level and the flight previous-- ["No flight previous" ,nameOfFlight, kindOfFlight]
-sub.create_initial_level(arr_level_case1, len(arr_pos_case1), arr_level_case2, len(arr_pos_case2), arr_level_case3, len(arr_pos_case3), arr_level_case4, len(arr_pos_case4))
+sub.create_initial_level(arr_level_case1, arr_CurrPos1, arr_level_case2, arr_CurrPos2, arr_level_case3, arr_CurrPos3, arr_level_case4, arr_CurrPos4)
 
 ####################################################################################################################################
 #################################### ------ MY Def ------ #####
@@ -334,12 +334,6 @@ for order_r in range(1, 21):
     arr_res = []
     arr_waiting_flight = []
 
-    arr_level_case1 = []
-    arr_level_case2 = []
-    arr_level_case3 = []
-    arr_level_case4 = []
-    sub.create_initial_level(arr_level_case1, len(arr_pos_case1), arr_level_case2, len(arr_pos_case2), arr_level_case3, len(arr_pos_case3), arr_level_case4, len(arr_pos_case4))
-
     random.shuffle(arr_pos_case1)
     random.shuffle(arr_pos_case2)
     random.shuffle(arr_pos_case3)
@@ -354,11 +348,19 @@ for order_r in range(1, 21):
     arr_CurrPri1 = arr_priority_1
     arr_CurrPri2 = arr_priority_2
 
+    arr_level_case1 = []
+    arr_level_case2 = []
+    arr_level_case3 = []
+    arr_level_case4 = []
+    sub.create_initial_level(arr_level_case1, arr_CurrPos1, arr_level_case2, arr_CurrPos2, arr_level_case3, arr_CurrPos3, arr_level_case4, arr_CurrPos4)
+
+
     for time_minute in range(0, 1440):
         while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
             # IGNORE FLIGHT IF IT'S INVALID
             while isValidFlight(indexFlight) == False:
                 indexFlight += 1
+
             # CASE 1 ----- [?--SGN--?]
             if arr_schedule[indexFlight] == '1':
                 # 0. 
@@ -508,7 +510,8 @@ for order_r in range(1, 21):
                     # 3. Remove the first element in waiting flights array
                     arr_waiting_flight.remove([arr_waiting_flight[0][0], arr_waiting_flight[0][1], arr_waiting_flight[0][2], arr_waiting_flight[0][3]])     
             except:
-                print("Fault at processing waiting flight", time_minute)
+                # print("Fault at processing waiting flight", time_minute)
+                continue
 
     if order_r == 1:
         arr_res1 = arr_res
@@ -621,11 +624,9 @@ def glo_objectFunction(arr):
     return R1 + R2 + R3, len(arry_taxi), float(sumTaxi/currently), randint(0, 9)
 
 
-
-
-count_CrossOver = 0
 # Crossing Over 
-for idxxx in range(0, 1000):
+count_CrossOver = 0
+for idxxx in range(0, 2):
     v1, v11_, v111, v1111 = glo_objectFunction(arr_res1)
     v2, v22, v222, v2222 = glo_objectFunction(arr_res2)
     v3, v33, v333, v3333 = glo_objectFunction(arr_res3)
@@ -825,46 +826,49 @@ for idxxx in range(0, 1000):
     indexf_f = 0
     for time_minute in range(-10, 1440):
         # print(arr_Curr1[indexf_f][5], time_minute)
-        while arr_Curr1[indexf_f][3] == time_minute:
-            # print("??")
-            resTemp1 = arr_Curr1
-            resTemp2 = arr_Curr2
+        try:
+            while arr_Curr1[indexf_f][3] == time_minute:
+                # print("??")
+                resTemp1 = arr_Curr1
+                resTemp2 = arr_Curr2
 
-            tempPos = arr_Curr1[indexf_f][5]
-            arr_Curr1[indexf_f][5] = arr_Curr2[indexf_f][5]
-            arr_Curr2[indexf_f][5] = tempPos
+                tempPos = arr_Curr1[indexf_f][5]
+                arr_Curr1[indexf_f][5] = arr_Curr2[indexf_f][5]
+                arr_Curr2[indexf_f][5] = tempPos
 
-            v1_temp, _, _, _ = glo_objectFunction(arr_Curr1)
-            v2_temp, _, _, _ = glo_objectFunction(arr_Curr2)
+                v1_temp, _, _, _ = glo_objectFunction(arr_Curr1)
+                v2_temp, _, _, _ = glo_objectFunction(arr_Curr2)
 
-            valueof4 = []
-            valueof4.append(arr_v[0])
-            valueof4.append(arr_v[1])
-            valueof4.append(v1_temp)
-            valueof4.append(v2_temp)
-            valueof4.sort()
+                valueof4 = []
+                valueof4.append(arr_v[0])
+                valueof4.append(arr_v[1])
+                valueof4.append(v1_temp)
+                valueof4.append(v2_temp)
+                valueof4.sort()
 
-            if valueof4[0] == arr_v[0]:
-                arr_Curr1 = resTemp1
-            elif valueof4[0] == arr_v[1]:
-                arr_Curr1 = resTemp2
-            elif valueof4[0] ==  v2_temp:
-                arr_Curr1 = arr_Curr2
-                count_CrossOver += 1
-            else:
-                count_CrossOver += 1
-            
-            if valueof4[1] == arr_v[0]:
-                arr_Curr2 = resTemp2
-            elif valueof4[0] == arr_v[1]:
-                arr_Curr2 = resTemp2
-            elif valueof4[0] ==  v1_temp:
-                arr_Curr2 = arr_Curr1
-                count_CrossOver += 1
-            else:
-                count_CrossOver += 1
-            indexf_f += 1
-
+                if valueof4[0] == arr_v[0]:
+                    arr_Curr1 = resTemp1
+                elif valueof4[0] == arr_v[1]:
+                    arr_Curr1 = resTemp2
+                elif valueof4[0] ==  v2_temp:
+                    arr_Curr1 = arr_Curr2
+                    count_CrossOver += 1
+                else:
+                    count_CrossOver += 1
+                
+                if valueof4[1] == arr_v[0]:
+                    arr_Curr2 = resTemp2
+                elif valueof4[0] == arr_v[1]:
+                    arr_Curr2 = resTemp2
+                elif valueof4[0] ==  v1_temp:
+                    arr_Curr2 = arr_Curr1
+                    count_CrossOver += 1
+                else:
+                    count_CrossOver += 1
+                    
+                indexf_f += 1
+        except:
+            continue
 
     if make1 == 1:
         arr_res1 = arr_Curr1
@@ -952,9 +956,15 @@ for idxxx in range(0, 1000):
 ####################################################################################################################################
 final1, final2, final3, final4 = glo_objectFunction(arr_Curr1)
 # KHB
-print("------------------------------------------")
-for row in arr_Curr1:
-    print(row)
+# print("------------------------------------------")
+# for row in arr_Curr1:
+#     print(row)
+
+csvfile=open('out15.csv','w', newline='')
+obj=csv.writer(csvfile)
+for person in arr_Curr1:
+    obj.writerow(person)
+csvfile.close()
 
 ####################################################################################################################################
 ####################################################################################################################################
