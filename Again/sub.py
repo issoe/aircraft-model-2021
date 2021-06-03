@@ -2,7 +2,7 @@
 # from Users.khanhquang.Downloads.AirCraft_MODEL.Again.cur import Objective_Function
 import pandas as pd
 import re
-
+import csv
 
 # FUNC: Get the FIRST VALUE in a element of array to sort
 def takeOne(elem):
@@ -125,16 +125,30 @@ def findTaxi(position):
                 print("Position wasnot exist in finding TAXI at", position)
                 return -1, -1
 
+####################################################################################################################################
+csvfile=open('out14.csv','r', newline='')
+obj=csv.reader(csvfile)
 
-def create_initial_level(arr_1, len_1, arr_2, len_2, arr_3, len_3, arr_4, len_4):
-    for i in range(0, len_1):
-        arr_1.append([-5,"-","-"])
-    for i in range(0, len_2):
-        arr_2.append([-5,"-","-"])
-    for i in range(0, len_3):
-        arr_3.append([-5,"-","-"])
-    for i in range(0, len_4):
-        arr_4.append([-5,"-","-"])
+def create_initial_level(level1, pos1, level2, pos2, level3, pos3, level4, pos4):
+    for _ in range(0, len(pos1)):
+        level1.append([-5,"-","-"])
+    for _ in range(0, len(pos2)):
+        level2.append([-5,"-","-"])
+    for _ in range(0, len(pos3)):
+        level3.append([-5,"-","-"])
+    for _ in range(0, len(pos4)):
+        level4.append([-5,"-","-"])
+
+    # Update 
+    if obj:
+        for row in obj:
+            for idx in range(0, len(pos1)):
+                if row[5] == pos1[idx]:
+                    level1[idx][0] = row[5]
+                    level1[idx][1] = row[6]
+                    level1[idx][2] = row[7]                
+
+
 
 ################################################################################################################################
 ################################################################################################################################
@@ -183,6 +197,8 @@ def swap_chromosome(idxFlight, ar_res1, ar_res2):
     ar_res2[idxFlight][2] = temp_2
     
     return
+
+
 
 
 
