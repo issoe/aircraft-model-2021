@@ -142,13 +142,12 @@ def create_initial_level(level1, pos1, level2, pos2, level3, pos3, level4, pos4)
     # Update 
     if obj:
         for row in obj:
-            for idx in range(0, len(pos1)):
-                if row[5] == pos1[idx]:
-                    level1[idx][0] = row[5]
-                    level1[idx][1] = row[6]
-                    level1[idx][2] = row[7]                
-
-
+            if row[5] > 1440:
+                for idx in range(0, len(pos1)):
+                    if row[5] == pos1[idx]:
+                        level1[idx][0] = row[5]
+                        level1[idx][1] = row[6]
+                        level1[idx][2] = row[7]                
 
 ################################################################################################################################
 ################################################################################################################################
