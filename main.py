@@ -61,7 +61,7 @@ arr_level_case4 = []
 arr_pos_case1 = [3, 36, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68]
 arr_pos_case2 = [1, 2, 31, 32, 33, 34, 37, 38, 40, 41, 42, 43, 51, 52, 53, 54, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 91, 92, 93, 100, 101, 102, 103, 104]
 arr_pos_case3 = [4, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 26, 27]
-arr_pos_case4 = [11, 12, 13, 24]
+arr_pos_case4 = [11, 12, 13]
 
 arr_priority_1 = [4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17]
 arr_priority_2 = [8, 9, 15, 16, 17, 18, 19, 20, 21, 22]
@@ -357,7 +357,7 @@ for order_r in range(1, 21):
     sub.create_initial_level(arr_level_case1, arr_CurrPos1, arr_level_case2, arr_CurrPos2, arr_level_case3, arr_CurrPos3, arr_level_case4, arr_CurrPos4)
 
 
-    for time_minute in range(0, theTime):
+    for time_minute in range(0, 1400):
         #  or ((time_minute == arr_timeArrival[indexFlight]) and (arr_timeDeparture[indexFlight] > arr_timeArrival[indexFlight]) and (arr_timeArrival[indexFlight] != -1))
         while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
             # IGNORE FLIGHT IF IT'S INVALID
