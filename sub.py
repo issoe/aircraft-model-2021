@@ -126,7 +126,7 @@ def findTaxi(position):
                 return -1, -1
 
 ####################################################################################################################################
-csvfile=open('out13.csv','r', newline='')
+csvfile=open('Output/out13.csv','r', newline='')
 obj=csv.reader(csvfile)
 
 def create_initial_level(level1, pos1, level2, pos2, level3, pos3, level4, pos4):
@@ -197,17 +197,3 @@ def swap_chromosome(idxFlight, ar_res1, ar_res2):
     ar_res2[idxFlight][2] = temp_2
     
     return
-
-
-
-
-
-        #     # chromosome1 = arr_res1[indexFlight_t]
-        # # chromosome2 = arr_res2[indexFlight_t]
-        # temp_1 = arr_res1[indexFlight_t][1]
-        # temp_2 = arr_res1[indexFlight_t][2]
-        # arr_res1[indexFlight_t][1] = arr_res2[indexFlight_t][1]
-        # arr_res1[indexFlight_t][2] = arr_res2[indexFlight_t][2]
-        # arr_res2[indexFlight_t][1] = temp_1
-        # arr_res2[indexFlight_t][2] = temp_2
-        

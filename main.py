@@ -32,7 +32,7 @@ start = timeit.default_timer()
 #################################### ------ DATA FRAME ARRAY --> dfr ------ #########################################################
 # NOTE: DATA INPUT MUST BE SORTED
 # 1. Read data from file "input.csv" and get the numberOfFlighs
-dfr = pd.read_csv('15.csv', sep=';', header=None)
+dfr = pd.read_csv('Input/14.csv', sep=';', header=None)
 numberOfFlights = len(dfr.iloc[:, 0])
 
 # 2. Clean DATA and adding into array-s
@@ -626,7 +626,7 @@ def glo_objectFunction(arr):
 
 # Crossing Over 
 count_CrossOver = 0
-for idxxx in range(0, 1000):
+for idxxx in range(0, 2):
     v1, v11_, v111, v1111 = glo_objectFunction(arr_res1)
     v2, v22, v222, v2222 = glo_objectFunction(arr_res2)
     v3, v33, v333, v3333 = glo_objectFunction(arr_res3)
@@ -957,13 +957,13 @@ for idxxx in range(0, 1000):
 final1, final2, final3, final4 = glo_objectFunction(arr_Curr1)
 # KHB
 # print("------------------------------------------")
-for row in arr_Curr1:
-    print(row)
+# for row in arr_Curr1:
+    # print(row)
 
-csvfile=open('out14.csv','w', newline='')
-obj=csv.writer(csvfile)
-for person in arr_Curr1:
-    obj.writerow(person)
+csvfile=open('Output/out14.csv','w', newline='')
+obj_j=csv.writer(csvfile)
+for roww in arr_Curr1:
+    obj_j.writerow(roww)
 csvfile.close()
 
 ####################################################################################################################################
