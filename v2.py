@@ -626,7 +626,7 @@ def glo_objectFunction(arr):
 
 # Crossing Over 
 count_CrossOver = 0
-for idxxx in range(0, 2):
+for idxxx in range(0, 1000):
     v1, v11_, v111, v1111 = glo_objectFunction(arr_res1)
     v2, v22, v222, v2222 = glo_objectFunction(arr_res2)
     v3, v33, v333, v3333 = glo_objectFunction(arr_res3)
@@ -957,10 +957,10 @@ for idxxx in range(0, 2):
 final1, final2, final3, final4 = glo_objectFunction(arr_Curr1)
 # KHB
 # print("------------------------------------------")
-# for row in arr_Curr1:
-#     print(row)
+for row in arr_Curr1:
+    print(row)
 
-csvfile=open('out15.csv','w', newline='')
+csvfile=open('out14.csv','w', newline='')
 obj=csv.writer(csvfile)
 for person in arr_Curr1:
     obj.writerow(person)
