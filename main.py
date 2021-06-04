@@ -32,7 +32,7 @@ start = timeit.default_timer()
 #################################### ------ DATA FRAME ARRAY --> dfr ------ #########################################################
 # NOTE: DATA INPUT MUST BE SORTED
 # 1. Read data from file "input.csv" and get the numberOfFlighs
-dfr = pd.read_csv('Input/14.csv', sep=';', header=None)
+dfr = pd.read_csv('Input/20.csv', sep=';', header=None)
 numberOfFlights = len(dfr.iloc[:, 0])
 
 # 2. Clean DATA and adding into array-s
@@ -963,7 +963,7 @@ final1, final2, final3, final4 = glo_objectFunction(arr_Curr1)
 # for row in arr_Curr1:
     # print(row)
 
-csvfile=open('Output/out14.csv','w', newline='')
+csvfile=open('Output/out20.csv','w', newline='')
 obj_j=csv.writer(csvfile)
 for roww in arr_Curr1:
     obj_j.writerow(roww)

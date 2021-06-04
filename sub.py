@@ -126,7 +126,7 @@ def findTaxi(position):
                 return -1, -1
 
 ####################################################################################################################################
-csvfile=open('Output/out13.csv','r', newline='')
+csvfile=open('Output/out19.csv','r', newline='')
 obj=csv.reader(csvfile)
 
 def create_initial_level(level1, pos1, level2, pos2, level3, pos3, level4, pos4):
@@ -142,7 +142,7 @@ def create_initial_level(level1, pos1, level2, pos2, level3, pos3, level4, pos4)
     # Update 
     if obj:
         for row in obj:
-            if row[5] > 1440:
+            if int(row[4]) > 1440:
                 for idx in range(0, len(pos1)):
                     if row[5] == pos1[idx]:
                         level1[idx][0] = row[5]
