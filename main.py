@@ -2,14 +2,8 @@
 #################################### ------ Import library  ------ #################################################################
 import sub
 import pandas as pd
-import numpy as np
 import re
-import random
 import csv
-# from random import seed
-from random import randint
-# seed(1)
-
 
 ####################################################################################################################################
 # Initial parameters from MISS.TRANG
@@ -32,7 +26,7 @@ start = timeit.default_timer()
 #################################### ------ DATA FRAME ARRAY --> dfr ------ #########################################################
 # NOTE: DATA INPUT MUST BE SORTED
 # 1. Read data from file "input.csv" and get the numberOfFlighs
-dfr = pd.read_csv('Input/15.csv', sep=';', header=None)
+dfr = pd.read_csv('Input/14.csv', sep=';', header=None)
 numberOfFlights = len(dfr.iloc[:, 0])
 
 # 2. Clean DATA and adding into array-s
@@ -66,7 +60,6 @@ arr_pos_case4 = [11, 12, 13]
 arr_priority_1 = [4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17]
 arr_priority_2 = [8, 9, 15, 16, 17, 18, 19, 20, 21, 22]
 arr_priority_3 = [4, 5, 6, 7, 8, 9, 15, 16, 17, 18, 19, 20, 21, 22]
-
 
 arr_CurrPos1 = arr_pos_case1
 arr_CurrPos2 = arr_pos_case2
@@ -232,18 +225,6 @@ def Objective_Function(position, n_flights_waiting_g):
 
     return v_object, n_flights_apron, round(R_Taxi, 8), n_flights_waiting_g
 
-def glo_Objective_Function(var_idx, arr_1, ele1, ele2, stat):
-    tempOne = arr_1[var_idx][1] 
-    tempTwo = arr_1[var_idx][2]
-    arr_1[var_idx][1] = ele1
-    arr_1[var_idx][2] = ele2
-    valu, _, _, _ = Objective_Function(arr_1[var_idx][5], 0)
-    valu += stat[1] # minus what????
-
-    arr_1[var_idx][1] = tempOne
-    arr_1[var_idx][2] = tempTwo
-    return valu / stat[2]
-
 def find_terminal(kindOfFlight, isVN, time_A, time_D, last_colum, n_waiting):
     # 1. Check the priority of "APU"
     mode_APU = False
@@ -327,20 +308,12 @@ arr_res1 = arr_res2 = arr_res3 = arr_res4 = arr_res5 = arr_res6 = arr_res7 = arr
 arr_res11 = arr_res12 = arr_res13 = arr_res14 = arr_res15 = arr_res16 = arr_res17 = arr_res18 = arr_res19= arr_res20 = []
 arr_res21 = arr_res22 = arr_res23 = arr_res24 = arr_res25 = arr_res26 = arr_res27 = arr_res28 = arr_res29= arr_res30 = []
 
-with open('Include/case15.txt') as num:
+with open('Include/case14.txt') as num:
     for order_r in range(1, 21):
         n_flights_apron = 0
         indexFlight = 0
-
         arr_res = []
         arr_waiting_flight = []
-
-        random.shuffle(arr_pos_case1)
-        random.shuffle(arr_pos_case2)
-        random.shuffle(arr_pos_case3)
-        random.shuffle(arr_pos_case4)
-        random.shuffle(arr_priority_1)
-        random.shuffle(arr_priority_2)
 
         numbers = num.readline()
         n = numbers.split()
@@ -623,12 +596,8 @@ try:
 except:
     print("Fault sort at Crossing over ")
 
-# print("Test:", arr_res1[0])
-
 ##############################################################################################################
 ##############################################################################################################
-currently = 333
-
 def glo_objectFunction(arr):
     global numberOfFlights
     sumTaxi = 0
@@ -663,7 +632,7 @@ def glo_objectFunction(arr):
     R2 = float(sumTaxi) / (numberOfFlights * maxTaxi)
     R3 = 0
 
-    return R1 + R2 + R3, len(arry_taxi), float(sumTaxi/currently), randint(0, 9)
+    return R1 + R2 + R3, len(arry_taxi), sumTaxi, R3
 
 
 # Crossing Over 
@@ -969,35 +938,34 @@ for idxxx in range(0, 1000):
         arr_res19 = arr_Curr2
     elif make2 == 20:
         arr_res20 = arr_Curr2
-
-print("RemoveParking", "\tAverageTaxi", "\tWaitingflights","\tObjectiveFunction")
-print("(1)\t", round(v11_, 10), '\t', round(v111, 10), '\t', v1111, '\t\t', v1)
-print("(2)\t", round(v22, 10), '\t', round(v222, 10), '\t', v2222, '\t\t', v2)
-print("(3)\t", round(v33, 10), '\t', round(v333, 10), '\t', v3333, '\t\t', v3)
-print("(4)\t", round(v44, 10), '\t', round(v444, 10), '\t', v4444, '\t\t', v4)
-print("(5)\t", round(v55, 10), '\t', round(v555, 10), '\t', v5555, '\t\t', v5)
-print("(6)\t", round(v66, 10), '\t', round(v666, 10), '\t', v6666, '\t\t', v6)
-print("(7)\t", round(v77, 10), '\t', round(v777, 10), '\t', v7777, '\t\t', v7)
-print("(8)\t", round(v88, 10), '\t', round(v888, 10), '\t', v8888, '\t\t', v8)
-print("(9)\t", round(v99, 10), '\t', round(v999, 10), '\t', v9999, '\t\t', v9)
-print("(10)\t", round(v100, 10), '\t', round(v1000, 10), '\t', v10000, '\t\t', v10)
-print("(11)\t", round(v110, 10), '\t', round(v1100, 10), '\t', v11000, '\t\t', v11)
-print("(12)\t", round(v120, 10), '\t', round(v1200, 10), '\t', v12000, '\t\t', v12)
-print("(13)\t", round(v130, 10), '\t', round(v1300, 10), '\t', v13000, '\t\t', v13)
-print("(14)\t", round(v140, 10), '\t', round(v1400, 10), '\t', v14000, '\t\t', v14)
-print("(15)\t", round(v150, 10), '\t', round(v1500, 10), '\t', v15000, '\t\t', v15)
-print("(16)\t", round(v160, 10), '\t', round(v1600, 10), '\t', v16000, '\t\t', v15)
-print("(17)\t", round(v170, 10), '\t', round(v1700, 10), '\t', v17000, '\t\t', v17)
-print("(18)\t", round(v180, 10), '\t', round(v1800, 10), '\t', v18000, '\t\t', v18)
-print("(19)\t", round(v190, 10), '\t', round(v1900, 10), '\t', v19000, '\t\t', v19)
-print("(20)\t", round(v200, 10), '\t', round(v2000, 10), '\t', v20000, '\t\t', v20)
-print('\n')
+print("==========================================================================")
+print("     RemoveParking", "\tAverageTaxi", "\tWaitingflights","\tObjectiveFunction")
+print("(1)\t", round(v11_, 10), '\t\t', round(v111, 10), '\t\t', v1111, '\t\t', v1)
+print("(2)\t", round(v22, 10), '\t\t', round(v222, 10), '\t\t', v2222, '\t\t', v2)
+print("(3)\t", round(v33, 10), '\t\t', round(v333, 10), '\t\t', v3333, '\t\t', v3)
+print("(4)\t", round(v44, 10), '\t\t', round(v444, 10), '\t\t', v4444, '\t\t', v4)
+print("(5)\t", round(v55, 10), '\t\t', round(v555, 10), '\t\t', v5555, '\t\t', v5)
+print("(6)\t", round(v66, 10), '\t\t', round(v666, 10), '\t\t', v6666, '\t\t', v6)
+print("(7)\t", round(v77, 10), '\t\t', round(v777, 10), '\t\t', v7777, '\t\t', v7)
+print("(8)\t", round(v88, 10), '\t\t', round(v888, 10), '\t\t', v8888, '\t\t', v8)
+print("(9)\t", round(v99, 10), '\t\t', round(v999, 10), '\t\t', v9999, '\t\t', v9)
+print("(10)\t", round(v100, 10), '\t\t', round(v1000, 10), '\t\t', v10000, '\t\t', v10)
+print("(11)\t", round(v110, 10), '\t\t', round(v1100, 10), '\t\t', v11000, '\t\t', v11)
+print("(12)\t", round(v120, 10), '\t\t', round(v1200, 10), '\t\t', v12000, '\t\t', v12)
+print("(13)\t", round(v130, 10), '\t\t', round(v1300, 10), '\t\t', v13000, '\t\t', v13)
+print("(14)\t", round(v140, 10), '\t\t', round(v1400, 10), '\t\t', v14000, '\t\t', v14)
+print("(15)\t", round(v150, 10), '\t\t', round(v1500, 10), '\t\t', v15000, '\t\t', v15)
+print("(16)\t", round(v160, 10), '\t\t', round(v1600, 10), '\t\t', v16000, '\t\t', v15)
+print("(17)\t", round(v170, 10), '\t\t', round(v1700, 10), '\t\t', v17000, '\t\t', v17)
+print("(18)\t", round(v180, 10), '\t\t', round(v1800, 10), '\t\t', v18000, '\t\t', v18)
+print("(19)\t", round(v190, 10), '\t\t', round(v1900, 10), '\t\t', v19000, '\t\t', v19)
+print("(20)\t", round(v200, 10), '\t\t', round(v2000, 10), '\t\t', v20000, '\t\t', v20)
 
 ####################################################################################################################################
 ####################################################################################################################################
 final1, final2, final3, final4 = glo_objectFunction(arr_Curr1)
 
-csvfile=open('Output/out15.csv','w', newline='')
+csvfile=open('Output/out14.csv','w', newline='')
 obj_j=csv.writer(csvfile)
 for roww in arr_Curr1:
     obj_j.writerow(roww)
