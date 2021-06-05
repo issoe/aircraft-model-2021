@@ -32,7 +32,7 @@ start = timeit.default_timer()
 #################################### ------ DATA FRAME ARRAY --> dfr ------ #########################################################
 # NOTE: DATA INPUT MUST BE SORTED
 # 1. Read data from file "input.csv" and get the numberOfFlighs
-dfr = pd.read_csv('Input/20.csv', sep=';', header=None)
+dfr = pd.read_csv('Input/15.csv', sep=';', header=None)
 numberOfFlights = len(dfr.iloc[:, 0])
 
 # 2. Clean DATA and adding into array-s
@@ -74,7 +74,6 @@ arr_CurrPos3 = arr_pos_case3
 arr_CurrPos4 = arr_pos_case4
 arr_CurrPri1 = arr_priority_1
 arr_CurrPri2 = arr_priority_2
-
 
 # Array contained level and the flight previous-- ["No flight previous" ,nameOfFlight, kindOfFlight]
 sub.create_initial_level(arr_level_case1, arr_CurrPos1, arr_level_case2, arr_CurrPos2, arr_level_case3, arr_CurrPos3, arr_level_case4, arr_CurrPos4)
@@ -324,238 +323,279 @@ def find_terminal(kindOfFlight, isVN, time_A, time_D, last_colum, n_waiting):
 # Create 20 set of chromosome 
 arr_result = []
 
-
 arr_res1 = arr_res2 = arr_res3 = arr_res4 = arr_res5 = arr_res6 = arr_res7 = arr_res8 = arr_res9= arr_res10 = []
 arr_res11 = arr_res12 = arr_res13 = arr_res14 = arr_res15 = arr_res16 = arr_res17 = arr_res18 = arr_res19= arr_res20 = []
 arr_res21 = arr_res22 = arr_res23 = arr_res24 = arr_res25 = arr_res26 = arr_res27 = arr_res28 = arr_res29= arr_res30 = []
 
-for order_r in range(1, 21):
-    n_flights_apron = 0
-    indexFlight = 0
+with open('Include/case15.txt') as num:
+    for order_r in range(1, 21):
+        n_flights_apron = 0
+        indexFlight = 0
 
-    arr_res = []
-    arr_waiting_flight = []
+        arr_res = []
+        arr_waiting_flight = []
 
-    random.shuffle(arr_pos_case1)
-    random.shuffle(arr_pos_case2)
-    random.shuffle(arr_pos_case3)
-    random.shuffle(arr_pos_case4)
-    random.shuffle(arr_priority_1)
-    random.shuffle(arr_priority_2)
+        random.shuffle(arr_pos_case1)
+        random.shuffle(arr_pos_case2)
+        random.shuffle(arr_pos_case3)
+        random.shuffle(arr_pos_case4)
+        random.shuffle(arr_priority_1)
+        random.shuffle(arr_priority_2)
 
-    arr_CurrPos1 = arr_pos_case1
-    arr_CurrPos2 = arr_pos_case2
-    arr_CurrPos3 = arr_pos_case3
-    arr_CurrPos4 = arr_pos_case4
-    arr_CurrPri1 = arr_priority_1
-    arr_CurrPri2 = arr_priority_2
+        numbers = num.readline()
+        n = numbers.split()
+        lst = []
+        for x in range(len(n)):
+            nu = n[x]
+            lst.append(int(nu))
+        arr_CurrPos1 = lst
+        
+        numbers = num.readline()
+        n = numbers.split()
+        lst = []
+        for x in range(len(n)):
+            nu = n[x]
+            lst.append(int(nu))
+        arr_CurrPos2 = lst
 
-    arr_level_case1 = []
-    arr_level_case2 = []
-    arr_level_case3 = []
-    arr_level_case4 = []
-    sub.create_initial_level(arr_level_case1, arr_CurrPos1, arr_level_case2, arr_CurrPos2, arr_level_case3, arr_CurrPos3, arr_level_case4, arr_CurrPos4)
+        numbers = num.readline()
+        n = numbers.split()
+        lst = []
+        for x in range(len(n)):
+            nu = n[x]
+            lst.append(int(nu))
+        arr_CurrPos3 = lst
+
+        numbers = num.readline()
+        n = numbers.split()
+        lst = []
+        for x in range(len(n)):
+            nu = n[x]
+            lst.append(int(nu))
+        arr_CurrPos4 = lst
+
+        numbers = num.readline()
+        n = numbers.split()
+        lst = []
+        for x in range(len(n)):
+            nu = n[x]
+            lst.append(int(nu))
+        arr_CurrPri1 = lst
+        
+        numbers = num.readline()
+        n = numbers.split()
+        lst = []
+        for x in range(len(n)):
+            nu = n[x]
+            lst.append(int(nu))
+        arr_CurrPri2 = lst
+
+        arr_level_case1 = []
+        arr_level_case2 = []
+        arr_level_case3 = []
+        arr_level_case4 = []
+        sub.create_initial_level(arr_level_case1, arr_CurrPos1, arr_level_case2, arr_CurrPos2, arr_level_case3, arr_CurrPos3, arr_level_case4, arr_CurrPos4)
 
 
-    for time_minute in range(0, 1400):
-        #  or ((time_minute == arr_timeArrival[indexFlight]) and (arr_timeDeparture[indexFlight] > arr_timeArrival[indexFlight]) and (arr_timeArrival[indexFlight] != -1))
-        while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
-            # IGNORE FLIGHT IF IT'S INVALID
-            while isValidFlight(indexFlight) == False:
-                indexFlight += 1
+        for time_minute in range(0, 1400):
+            #  or ((time_minute == arr_timeArrival[indexFlight]) and (arr_timeDeparture[indexFlight] > arr_timeArrival[indexFlight]) and (arr_timeArrival[indexFlight] != -1))
+            while (time_minute == arr_timeDeparture[indexFlight]) or (arr_timeDeparture[indexFlight] == -1):
+                # IGNORE FLIGHT IF IT'S INVALID
+                while isValidFlight(indexFlight) == False:
+                    indexFlight += 1
 
-            # CASE 1 ----- [?--SGN--?]
-            if arr_schedule[indexFlight] == '1':
-                # 0. 
-                n_waiting_gg = num1 = num2 = 0
-                fin = indexFlight
-                while(time_minute == arr_timeDeparture[fin] or time_minute == arr_timeArrival[fin]):
-                    if time_minute == arr_timeDeparture[fin]:
-                        num1 += 1
-                    if time_minute == arr_timeArrival[fin]:
-                        num2 += 1
-                    fin += 1
+                # CASE 1 ----- [?--SGN--?]
+                if arr_schedule[indexFlight] == '1':
+                    # 0. 
+                    n_waiting_gg = num1 = num2 = 0
+                    fin = indexFlight
+                    while(time_minute == arr_timeDeparture[fin] or time_minute == arr_timeArrival[fin]):
+                        if time_minute == arr_timeDeparture[fin]:
+                            num1 += 1
+                        if time_minute == arr_timeArrival[fin]:
+                            num2 += 1
+                        fin += 1
 
-                n_waiting_gg = num1 if (num1 > num2) else num2
-                    
-                # 1. Find a suitable position            
-                pos, level, final_l, _R1, _R2, _R3 = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+                    n_waiting_gg = num1 if (num1 > num2) else num2
+                        
+                    # 1. Find a suitable position            
+                    pos, level, final_l, _R1, _R2, _R3 = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
 
 
-                # 2. Update again level with time_Departure
-                newlevel = arr_timeDeparture[indexFlight]
-                update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
+                    # 2. Update again level with time_Departure
+                    newlevel = arr_timeDeparture[indexFlight]
+                    update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
 
-                # 3. Add the flight to the result
-                arr_res.append([indexFlight, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][1]])
+                    # 3. Add the flight to the result
+                    arr_res.append([indexFlight, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], arr_timeArrival[indexFlight], arr_timeDeparture[indexFlight], pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][1]])
 
-                # 4. Next Flight
-                indexFlight += 1
-            
-            # CASE 2 ----- [SGN--?--SGN]
-            if arr_schedule[indexFlight] == '2':
-                ##--------------------- PHASE 1 ---------------------##
-                # 0. 
-                n_waiting_gg = num1 = num2 = 0
-                fin = indexFlight
-                while(time_minute == arr_timeDeparture[fin] or time_minute == arr_timeArrival[fin]):
-                    if time_minute == arr_timeDeparture[fin]:
-                        num1 += 1
-                    if time_minute == arr_timeArrival[fin]:
-                        num2 += 1
-                    fin += 1
-
-                n_waiting_gg = num1 if (num1 > num2) else num2
-
-                # 1. Find a suitable position
-                pos, level, final_l, _R1, _R2, _R3  = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
-
-                # 2. Add the flight to a just found position
-                # 2.1 UPDATE time_A and time_D
-                time_A = 0
-                if level == 0:
-                    time_A = -1
-                else:
-                    time_A = level
-                time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
-
-                # 2.2 Get the previous flight 
-                kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
-
-                # 3. UPDATE NEW LEVEL HERE 
-                newlevel = time_D
-                update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0])
-
-                # 4. Adding the result_array
-                arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]])
+                    # 4. Next Flight
+                    indexFlight += 1
                 
-                ##--------------------- PHASE 2 ---------------------##
-                ### Getting "ONLY" the second flight to queue
-                flightNO_temp = ''
-                if len(dfr[1][indexFlight]) == 4:
-                    flightNO_temp = dfr[1][indexFlight]
-                elif len(dfr[1][indexFlight]) == 9:
-                    flightNO_temp = dfr[1][indexFlight][5:9]
-                else:                                       # <FIX> -- maybe delete this line
-                    print("Get len df [1][index] fault")    # <FIX> -- maybe delete this line
-                
-                ### Adding 
-                arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][1], flightNO_temp, str(arr_last_colum[indexFlight])])
+                # CASE 2 ----- [SGN--?--SGN]
+                if arr_schedule[indexFlight] == '2':
+                    ##--------------------- PHASE 1 ---------------------##
+                    # 0. 
+                    n_waiting_gg = num1 = num2 = 0
+                    fin = indexFlight
+                    while(time_minute == arr_timeDeparture[fin] or time_minute == arr_timeArrival[fin]):
+                        if time_minute == arr_timeDeparture[fin]:
+                            num1 += 1
+                        if time_minute == arr_timeArrival[fin]:
+                            num2 += 1
+                        fin += 1
 
-                ### ALWAYS SORT WHEN ADD FLIGHT TO WAITING_FLIGHT
-                try:
-                    arr_waiting_flight.sort(key=sub.takeOne)  # OKAY
-                except:
-                    print("Fault sorted")
+                    n_waiting_gg = num1 if (num1 > num2) else num2
 
-                # 5. Next flight
-                indexFlight += 1
-
-            # CASE 3 ----- [SGN--?]
-            if arr_schedule[indexFlight] == '3':
-                # 0. 
-                n_waiting_gg = num1 = num2 = 0
-                fin = indexFlight
-                while(time_minute == arr_timeDeparture[fin] or time_minute == arr_timeArrival[fin]):
-                    if time_minute == arr_timeDeparture[fin]:
-                        num1 += 1
-                    if time_minute == arr_timeArrival[fin]:
-                        num2 += 1
-                    fin += 1
-
-                n_waiting_gg = num1 if (num1 > num2) else num2
-
-                # 1. Find a suitable position
-                pos, level, final_l, _R1, _R2, _R3  = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
-
-                # 2. Add the flight to a just found position
-                # 2.1 UPDATE time_A and time_D
-                time_A = 0
-                if level == 0:
-                    time_A = -1
-                else:
-                    time_A = level
-                time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
-
-                # 2.2 Get the previous flight 
-                kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
-
-                # 3. UPDATE NEW LEVEL HERE 
-                newlevel = time_D
-                update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
-
-                # 4. Adding the result_array
-                arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]])
-
-                # 5. Next flight 
-                indexFlight += 1
-
-            # CASE 4 ----- [?--SGN]
-            if arr_schedule[indexFlight] == '4':
-                # 1. Add flight to waiting array
-                arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][0], dfr[1][indexFlight], str(arr_last_colum[indexFlight])])
-                
-                # 2. Next flight
-                indexFlight += 1  
-
-            ########################################################################################################
-            ########################################################################################################
-            # ADD "flight in queue" to "the head of flight" 
-            try:
-                while time_minute == arr_waiting_flight[0][0]:  
                     # 1. Find a suitable position
-                    pos, level, final_l, _, _, _ = find_terminal(arr_waiting_flight[0][2], arr_waiting_flight[0][1], -1, arr_waiting_flight[0][0], arr_waiting_flight[0][3], n_waiting_gg)
+                    pos, level, final_l, _R1, _R2, _R3  = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+
+                    # 2. Add the flight to a just found position
+                    # 2.1 UPDATE time_A and time_D
+                    time_A = 0
+                    if level == 0:
+                        time_A = -1
+                    else:
+                        time_A = level
+                    time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
+
+                    # 2.2 Get the previous flight 
+                    kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
+
+                    # 3. UPDATE NEW LEVEL HERE 
+                    newlevel = time_D
+                    update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0])
+
+                    # 4. Adding the result_array
+                    arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]])
                     
-                    # 2. UPDATE NEW LEVEL HERE 
-                    newlevel = arr_waiting_flight[0][0]
-                    update_level(pos, newlevel, arr_waiting_flight[0][2], arr_waiting_flight[0][1])
+                    ##--------------------- PHASE 2 ---------------------##
+                    ### Getting "ONLY" the second flight to queue
+                    flightNO_temp = ''
+                    if len(dfr[1][indexFlight]) == 4:
+                        flightNO_temp = dfr[1][indexFlight]
+                    elif len(dfr[1][indexFlight]) == 9:
+                        flightNO_temp = dfr[1][indexFlight][5:9]
+                    else:                                       # <FIX> -- maybe delete this line
+                        print("Get len df [1][index] fault")    # <FIX> -- maybe delete this line
+                    
+                    ### Adding 
+                    arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][1], flightNO_temp, str(arr_last_colum[indexFlight])])
 
-                    # 3. Remove the first element in waiting flights array
-                    arr_waiting_flight.remove([arr_waiting_flight[0][0], arr_waiting_flight[0][1], arr_waiting_flight[0][2], arr_waiting_flight[0][3]])     
-            except:
-                # print("Fault at processing waiting flight", time_minute)
-                continue
+                    ### ALWAYS SORT WHEN ADD FLIGHT TO WAITING_FLIGHT
+                    try:
+                        arr_waiting_flight.sort(key=sub.takeOne)  # OKAY
+                    except:
+                        print("Fault sorted")
 
-    if order_r == 1:
-        arr_res1 = arr_res
-    if order_r == 2:
-        arr_res2 = arr_res
-    elif order_r == 3:
-        arr_res3 = arr_res
-    elif order_r == 4:
-        arr_res4 = arr_res
-    elif order_r == 5:
-        arr_res5 = arr_res
-    elif order_r == 6:
-        arr_res6 = arr_res
-    elif order_r == 7:
-        arr_res7 = arr_res
-    elif order_r == 8:
-        arr_res8 = arr_res
-    elif order_r == 9:
-        arr_res9 = arr_res
-    elif order_r == 10:
-        arr_res10 = arr_res
-    elif order_r == 11:
-        arr_res11 = arr_res
-    elif order_r == 12:
-        arr_res12 = arr_res
-    elif order_r == 13:
-        arr_res13 = arr_res
-    elif order_r == 14:
-        arr_res14 = arr_res
-    elif order_r == 15:
-        arr_res15 = arr_res
-    elif order_r == 16:
-        arr_res16 = arr_res
-    elif order_r == 17:
-        arr_res17 = arr_res
-    elif order_r == 18:
-        arr_res18 = arr_res
-    elif order_r == 19:
-        arr_res19 = arr_res
-    elif order_r == 20:
-        arr_res20 = arr_res
+                    # 5. Next flight
+                    indexFlight += 1
+
+                # CASE 3 ----- [SGN--?]
+                if arr_schedule[indexFlight] == '3':
+                    # 0. 
+                    n_waiting_gg = num1 = num2 = 0
+                    fin = indexFlight
+                    while(time_minute == arr_timeDeparture[fin] or time_minute == arr_timeArrival[fin]):
+                        if time_minute == arr_timeDeparture[fin]:
+                            num1 += 1
+                        if time_minute == arr_timeArrival[fin]:
+                            num2 += 1
+                        fin += 1
+
+                    n_waiting_gg = num1 if (num1 > num2) else num2
+
+                    # 1. Find a suitable position
+                    pos, level, final_l, _R1, _R2, _R3  = find_terminal(dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0], -1, arr_timeDeparture[indexFlight], str(arr_last_colum[indexFlight]), n_waiting_gg)
+
+                    # 2. Add the flight to a just found position
+                    # 2.1 UPDATE time_A and time_D
+                    time_A = 0
+                    if level == 0:
+                        time_A = -1
+                    else:
+                        time_A = level
+                    time_D = arr_timeDeparture[indexFlight] # maybe time_D = time_minute    
+
+                    # 2.2 Get the previous flight 
+                    kind_Light_Arrival, flightNo_Arrival = get_previous_flight(pos)
+
+                    # 3. UPDATE NEW LEVEL HERE 
+                    newlevel = time_D
+                    update_level(pos, newlevel, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]) 
+
+                    # 4. Adding the result_array
+                    arr_res.append([indexFlight, kind_Light_Arrival, flightNo_Arrival, time_A, time_D, pos, dfr[1][indexFlight][0:4], arr_codeFlights[indexFlight][0]])
+
+                    # 5. Next flight 
+                    indexFlight += 1
+
+                # CASE 4 ----- [?--SGN]
+                if arr_schedule[indexFlight] == '4':
+                    # 1. Add flight to waiting array
+                    arr_waiting_flight.append([arr_timeArrival[indexFlight], arr_codeFlights[indexFlight][0], dfr[1][indexFlight], str(arr_last_colum[indexFlight])])
+                    
+                    # 2. Next flight
+                    indexFlight += 1  
+
+                ########################################################################################################
+                ########################################################################################################
+                # ADD "flight in queue" to "the head of flight" 
+                try:
+                    while time_minute == arr_waiting_flight[0][0]:  
+                        # 1. Find a suitable position
+                        pos, level, final_l, _, _, _ = find_terminal(arr_waiting_flight[0][2], arr_waiting_flight[0][1], -1, arr_waiting_flight[0][0], arr_waiting_flight[0][3], n_waiting_gg)
+                        
+                        # 2. UPDATE NEW LEVEL HERE 
+                        newlevel = arr_waiting_flight[0][0]
+                        update_level(pos, newlevel, arr_waiting_flight[0][2], arr_waiting_flight[0][1])
+
+                        # 3. Remove the first element in waiting flights array
+                        arr_waiting_flight.remove([arr_waiting_flight[0][0], arr_waiting_flight[0][1], arr_waiting_flight[0][2], arr_waiting_flight[0][3]])     
+                except:
+                    # print("Fault at processing waiting flight", time_minute)
+                    continue
+
+        if order_r == 1:
+            arr_res1 = arr_res
+        if order_r == 2:
+            arr_res2 = arr_res
+        elif order_r == 3:
+            arr_res3 = arr_res
+        elif order_r == 4:
+            arr_res4 = arr_res
+        elif order_r == 5:
+            arr_res5 = arr_res
+        elif order_r == 6:
+            arr_res6 = arr_res
+        elif order_r == 7:
+            arr_res7 = arr_res
+        elif order_r == 8:
+            arr_res8 = arr_res
+        elif order_r == 9:
+            arr_res9 = arr_res
+        elif order_r == 10:
+            arr_res10 = arr_res
+        elif order_r == 11:
+            arr_res11 = arr_res
+        elif order_r == 12:
+            arr_res12 = arr_res
+        elif order_r == 13:
+            arr_res13 = arr_res
+        elif order_r == 14:
+            arr_res14 = arr_res
+        elif order_r == 15:
+            arr_res15 = arr_res
+        elif order_r == 16:
+            arr_res16 = arr_res
+        elif order_r == 17:
+            arr_res17 = arr_res
+        elif order_r == 18:
+            arr_res18 = arr_res
+        elif order_r == 19:
+            arr_res19 = arr_res
+        elif order_r == 20:
+            arr_res20 = arr_res
 
 # Sort
 try:
@@ -587,7 +627,6 @@ except:
 
 ##############################################################################################################
 ##############################################################################################################
-arr_statictis = []
 currently = 333
 
 def glo_objectFunction(arr):
@@ -651,31 +690,6 @@ for idxxx in range(0, 1000):
     v19, v190, v1900, v19000 = glo_objectFunction(arr_res19)
     v20, v200, v2000, v20000 = glo_objectFunction(arr_res20)
 
-    if idxxx == 0:
-        print("RemoveParking", "\tAverageTaxi", "\tWaitingflights","\tObjectiveFunction")
-        print("(1)\t", round(v11_, 10), '\t', round(v111, 10), '\t', v1111, '\t\t', v1)
-        print("(2)\t", round(v22, 10), '\t', round(v222, 10), '\t', v2222, '\t\t', v2)
-        print("(3)\t", round(v33, 10), '\t', round(v333, 10), '\t', v3333, '\t\t', v3)
-        print("(4)\t", round(v44, 10), '\t', round(v444, 10), '\t', v4444, '\t\t', v4)
-        print("(5)\t", round(v55, 10), '\t', round(v555, 10), '\t', v5555, '\t\t', v5)
-        print("(6)\t", round(v66, 10), '\t', round(v666, 10), '\t', v6666, '\t\t', v6)
-        print("(7)\t", round(v77, 10), '\t', round(v777, 10), '\t', v7777, '\t\t', v7)
-        print("(8)\t", round(v88, 10), '\t', round(v888, 10), '\t', v8888, '\t\t', v8)
-        print("(9)\t", round(v99, 10), '\t', round(v999, 10), '\t', v9999, '\t\t', v9)
-        print("(10)\t", round(v100, 10), '\t', round(v1000, 10), '\t', v10000, '\t\t', v10)
-        print("(11)\t", round(v110, 10), '\t', round(v1100, 10), '\t', v11000, '\t\t', v11)
-        print("(12)\t", round(v120, 10), '\t', round(v1200, 10), '\t', v12000, '\t\t', v12)
-        print("(13)\t", round(v130, 10), '\t', round(v1300, 10), '\t', v13000, '\t\t', v13)
-        print("(14)\t", round(v140, 10), '\t', round(v1400, 10), '\t', v14000, '\t\t', v14)
-        print("(15)\t", round(v150, 10), '\t', round(v1500, 10), '\t', v15000, '\t\t', v15)
-        print("(16)\t", round(v160, 10), '\t', round(v1600, 10), '\t', v16000, '\t\t', v15)
-        print("(17)\t", round(v170, 10), '\t', round(v1700, 10), '\t', v17000, '\t\t', v17)
-        print("(18)\t", round(v180, 10), '\t', round(v1800, 10), '\t', v18000, '\t\t', v18)
-        print("(19)\t", round(v190, 10), '\t', round(v1900, 10), '\t', v19000, '\t\t', v19)
-        print("(20)\t", round(v200, 10), '\t', round(v2000, 10), '\t', v20000, '\t\t', v20)
-        print('\n')
-
-
     arr_v = []
     arr_v.append(v1)
     arr_v.append(v2)
@@ -703,6 +717,7 @@ for idxxx in range(0, 1000):
     arr_Curr2 = []
     make1 = 0
     make2 = 0
+
     if arr_v[0] == v1:
         arr_Curr1 = arr_res1
         make1 = 1
@@ -955,15 +970,34 @@ for idxxx in range(0, 1000):
     elif make2 == 20:
         arr_res20 = arr_Curr2
 
+print("RemoveParking", "\tAverageTaxi", "\tWaitingflights","\tObjectiveFunction")
+print("(1)\t", round(v11_, 10), '\t', round(v111, 10), '\t', v1111, '\t\t', v1)
+print("(2)\t", round(v22, 10), '\t', round(v222, 10), '\t', v2222, '\t\t', v2)
+print("(3)\t", round(v33, 10), '\t', round(v333, 10), '\t', v3333, '\t\t', v3)
+print("(4)\t", round(v44, 10), '\t', round(v444, 10), '\t', v4444, '\t\t', v4)
+print("(5)\t", round(v55, 10), '\t', round(v555, 10), '\t', v5555, '\t\t', v5)
+print("(6)\t", round(v66, 10), '\t', round(v666, 10), '\t', v6666, '\t\t', v6)
+print("(7)\t", round(v77, 10), '\t', round(v777, 10), '\t', v7777, '\t\t', v7)
+print("(8)\t", round(v88, 10), '\t', round(v888, 10), '\t', v8888, '\t\t', v8)
+print("(9)\t", round(v99, 10), '\t', round(v999, 10), '\t', v9999, '\t\t', v9)
+print("(10)\t", round(v100, 10), '\t', round(v1000, 10), '\t', v10000, '\t\t', v10)
+print("(11)\t", round(v110, 10), '\t', round(v1100, 10), '\t', v11000, '\t\t', v11)
+print("(12)\t", round(v120, 10), '\t', round(v1200, 10), '\t', v12000, '\t\t', v12)
+print("(13)\t", round(v130, 10), '\t', round(v1300, 10), '\t', v13000, '\t\t', v13)
+print("(14)\t", round(v140, 10), '\t', round(v1400, 10), '\t', v14000, '\t\t', v14)
+print("(15)\t", round(v150, 10), '\t', round(v1500, 10), '\t', v15000, '\t\t', v15)
+print("(16)\t", round(v160, 10), '\t', round(v1600, 10), '\t', v16000, '\t\t', v15)
+print("(17)\t", round(v170, 10), '\t', round(v1700, 10), '\t', v17000, '\t\t', v17)
+print("(18)\t", round(v180, 10), '\t', round(v1800, 10), '\t', v18000, '\t\t', v18)
+print("(19)\t", round(v190, 10), '\t', round(v1900, 10), '\t', v19000, '\t\t', v19)
+print("(20)\t", round(v200, 10), '\t', round(v2000, 10), '\t', v20000, '\t\t', v20)
+print('\n')
 
 ####################################################################################################################################
+####################################################################################################################################
 final1, final2, final3, final4 = glo_objectFunction(arr_Curr1)
-# KHB
-# print("------------------------------------------")
-# for row in arr_Curr1:
-    # print(row)
 
-csvfile=open('Output/out20.csv','w', newline='')
+csvfile=open('Output/out15.csv','w', newline='')
 obj_j=csv.writer(csvfile)
 for roww in arr_Curr1:
     obj_j.writerow(roww)

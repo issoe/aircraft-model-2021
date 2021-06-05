@@ -112,7 +112,7 @@ def create_arr_lastColum(df, def_arr_last_colum, def_numberOfFlights):
 
 ####################################################################################################################################
 #################################### ------ TAXI_ARRAY --> df_taxi ------ ##########################################################
-df_taxi = pd.read_csv('taxi.csv', sep=';', header=None)
+df_taxi = pd.read_csv('Include/taxi.csv', sep=';', header=None)
 # print(df_taxi)
 
 # Find the average and maximum value taxi for each aircraft ----> FOR ONLY OBJECTIVE FUNCTION 
@@ -126,7 +126,8 @@ def findTaxi(position):
                 return -1, -1
 
 ####################################################################################################################################
-csvfile=open('Output/out19.csv','r', newline='')
+####################################################################################################################################
+csvfile=open('Output/out14.csv','r', newline='')
 obj=csv.reader(csvfile)
 
 def create_initial_level(level1, pos1, level2, pos2, level3, pos3, level4, pos4):
